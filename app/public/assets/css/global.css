@@ -1,0 +1,36 @@
+
+:root {
+    --primary: #303D2B;
+    --secondary: #A18C64;
+    --background: #F5F3EC;
+    --surface: #FFFFFF;
+    --text: #252B23;
+    --border: #DDD9CF;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: var(--background);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
