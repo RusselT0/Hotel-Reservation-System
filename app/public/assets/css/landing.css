@@ -1,0 +1,66 @@
+
+.hero {
+    min-height: 85vh;
+
+    background:
+        linear-gradient(
+            rgba(0, 0, 0, 0.35),
+            rgba(0, 0, 0, 0.35)
+        ),
+        url('../images/hero.jpg');
+
+    background-size: cover;
+    background-position: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 50px 20px;
+    text-align: center;
+}
+
+.hero-content {
+    max-width: 750px;
+    color: white;
+}
+
+.hero-content h1 {
+    font-size: clamp(32px, 5vw, 55px);
+    line-height: 1.2;
+    margin-bottom: 20px;
+}
+
+.hero-content p {
+    font-size: 16px;
+    margin-bottom: 30px;
+}
+
+.hero-button {
+    display: inline-block;
+    background: var(--secondary);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 6px;
+}
+
+.about-section,
+.rooms-section {
+    padding: 70px 20px;
+    text-align: center;
+}
+
+.about-section {
+    background: white;
+}
+
+.about-section h2,
+.rooms-section h2 {
+    margin-bottom: 20px;
+}
+
+.about-section p,
+.rooms-section p {
+    max-width: 650px;
+    margin: auto;
+}
