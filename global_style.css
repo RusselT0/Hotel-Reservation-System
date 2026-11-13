@@ -1,0 +1,47 @@
+/* =========================
+   GLOBAL STYLES
+========================= */
+
+:root {
+    --primary: #353E2B;
+    --secondary: #A18C64;
+    --cream: #F2EFE7;
+    --white: #FFFFFF;
+    --text: #252B23;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    color: var(--text);
+    line-height: 1.6;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.container {
+    width: 90%;
+    max-width: 1100px;
+    margin: auto;
+}
+
+.section-title {
+    font-size: 27px;
+    font-weight: 500;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-bottom: 35px;
+}
