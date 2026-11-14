@@ -1,0 +1,335 @@
+
+/* ===============================
+   BELLA VISTA PHOTO GALLERY
+================================ */
+
+.bv-gallery {
+    padding: 75px 20px 90px;
+    background: #F2EFE7;
+}
+
+.bv-gallery__panel {
+    max-width: 1050px;
+    margin: auto;
+    padding: 38px 45px 40px;
+
+    background: #E3E5DC;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+/* PHOTO GALLERY HEADER */
+
+.bv-gallery__header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding-bottom: 16px;
+    border-bottom: 1px solid #B7BBAF;
+}
+
+.bv-gallery__header h2 {
+    font-size: 25px;
+    font-weight: 400;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-align: center;
+    color: #353E2B;
+}
+
+/* PHOTO GALLERY SUBTEXT */
+
+.bv-gallery__description {
+    font-size: 14px;
+    color: #666;
+
+    text-align: center;
+    margin: 20px auto 0;
+
+    max-width: 650px;
+    line-height: 1.6;
+}
+
+/* ===============================
+   CAROUSEL
+================================ */
+
+.bv-carousel {
+    --card-width: clamp(220px, 28vw, 300px);
+    --card-height: clamp(305px, 38vw, 395px);
+    --side-gap: clamp(170px, 24vw, 270px);
+
+    position: relative;
+    margin-top: 15px;
+}
+
+.bv-carousel__stage {
+    position: relative;
+    width: 100%;
+    height: 460px;
+    overflow: hidden;
+}
+
+/* ALL CARDS */
+
+.bv-carousel__slide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    width: var(--card-width);
+    height: var(--card-height);
+
+    margin: 0;
+    overflow: hidden;
+    border-radius: 20px;
+
+    background: #353E2B;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transform:
+        translate(-50%, -50%)
+        scale(0.55);
+
+    transition:
+        transform 0.55s ease,
+        opacity 0.55s ease,
+        visibility 0.55s ease;
+
+    box-shadow: 0 8px 25px rgba(0,0,0,0.16);
+}
+
+/* CENTER IMAGE */
+
+.bv-carousel__slide.is-active {
+    opacity: 1;
+    visibility: visible;
+    z-index: 3;
+
+    transform:
+        translate(-50%, -50%)
+        scale(1);
+
+    box-shadow: 0 16px 35px rgba(0,0,0,0.23);
+}
+
+/* LEFT IMAGE */
+
+.bv-carousel__slide.is-prev {
+    opacity: 0.85;
+    visibility: visible;
+    z-index: 2;
+
+    transform:
+        translate(
+            calc(-50% - var(--side-gap)),
+            -50%
+        )
+        scale(0.72);
+}
+
+/* RIGHT IMAGE */
+
+.bv-carousel__slide.is-next {
+    opacity: 0.85;
+    visibility: visible;
+    z-index: 2;
+
+    transform:
+        translate(
+            calc(-50% + var(--side-gap)),
+            -50%
+        )
+        scale(0.72);
+}
+
+/* IMAGES */
+
+.bv-carousel__slide img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bv-carousel__slide.is-prev img,
+.bv-carousel__slide.is-next img {
+    filter: brightness(0.85);
+}
+
+/* CAPTIONS */
+
+.bv-carousel__slide figcaption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    padding: 40px 12px 18px;
+
+    background: linear-gradient(
+        transparent,
+        rgba(0,0,0,0.75)
+    );
+
+    color: white;
+    text-align: center;
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+/* ===============================
+   NAVIGATION ARROWS
+================================ */
+
+.bv-carousel__arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border: none;
+    border-radius: 50%;
+
+    background: rgba(255,255,255,0.88);
+    color: #353E2B;
+
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 5;
+
+    transition: background 0.25s ease;
+}
+
+.bv-carousel__arrow.prev {
+    left: 5px;
+}
+
+.bv-carousel__arrow.next {
+    right: 5px;
+}
+
+.bv-carousel__arrow:hover {
+    background: #A18C64;
+    color: white;
+}
+
+/* ===============================
+   INDICATOR DOTS
+================================ */
+
+.bv-carousel__dots {
+    display: flex;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 0;
+}
+
+.bv-carousel__dot {
+    width: 10px;
+    height: 6px;
+
+    border: none;
+    border-radius: 10px;
+    padding: 0;
+
+    background: #AEB3A6;
+    cursor: pointer;
+
+    transition:
+        width 0.3s ease,
+        background 0.3s ease;
+}
+
+.bv-carousel__dot.active {
+    width: 30px;
+    background: #353E2B;
+}
+
+.bv-carousel__arrow:focus-visible,
+.bv-carousel__dot:focus-visible {
+    outline: 3px solid #A18C64;
+    outline-offset: 3px;
+}
+
+/* ===============================
+   TABLET
+================================ */
+
+@media (max-width: 900px) {
+    .bv-gallery__panel {
+        padding: 30px 20px;
+    }
+
+    .bv-carousel {
+        --side-gap: clamp(155px, 25vw, 225px);
+    }
+
+    .bv-carousel__stage {
+        height: 420px;
+    }
+}
+
+/* ===============================
+   MOBILE
+================================ */
+
+@media (max-width: 600px) {
+    .bv-gallery {
+        padding: 55px 10px;
+    }
+
+    .bv-gallery__panel {
+        padding: 25px 12px 30px;
+    }
+
+    .bv-gallery__header h2 {
+        font-size: 17px;
+        letter-spacing: 1px;
+    }
+
+    .bv-gallery__counter {
+        font-size: 13px;
+    }
+
+    .bv-gallery__description {
+        font-size: 12px;
+    }
+
+    .bv-carousel {
+        --card-width: clamp(185px, 56vw, 235px);
+        --card-height: clamp(265px, 78vw, 310px);
+        --side-gap: clamp(118px, 39vw, 170px);
+    }
+
+    .bv-carousel__stage {
+        height: 350px;
+    }
+
+    .bv-carousel__arrow {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+
+    .bv-carousel__slide figcaption {
+        font-size: 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bv-carousel__slide,
+    .bv-carousel__arrow,
+    .bv-carousel__dot {
+        transition: none;
+    }
+}

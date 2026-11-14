@@ -1,0 +1,173 @@
+/* =========================
+   AVAILABILITY FORM
+========================= */
+
+.availability-form {
+    position: relative;
+    z-index: 3;
+
+    width: 92%;
+    max-width: 1100px;
+
+    /* Keep overlapping the hero image */
+    margin: -40px auto 0;
+
+    /* Increase card height through padding */
+    padding: 30px 25px;
+
+    background-color: #4F543E;
+    border-radius: 10px;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.3fr 0.8fr auto;
+
+    align-items: end;
+    gap: 15px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.40);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    min-width: 0;
+}
+
+.form-group label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #F2EFE7;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    min-width: 0;
+    height: 48px;
+
+    padding: 0 14px;
+
+    background-color: #FAF9F6;
+    color: #353E2B;
+
+    border: 2px solid transparent;
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 13px;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+/* HOVER EFFECT */
+.form-group input:hover,
+.form-group select:hover {
+    border: 2px solid #C9A86A;
+    background-color: #FFFDF6;
+
+    box-shadow: 0 0 8px rgba(201, 168, 106, 0.35);
+}
+
+/* FOCUS EFFECT */
+.form-group input:focus,
+.form-group select:focus {
+    border: 2px solid #D8B878;
+    background-color: #FFFFFF;
+
+    box-shadow:
+        0 0 0 4px rgba(216, 184, 120, 0.35),
+        0 0 15px rgba(216, 184, 120, 0.45);
+
+    outline: none;
+}
+
+/* DATE PICKER ICON */
+
+.form-group input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+/* PLACEHOLDER */
+
+.form-group input::placeholder {
+    color: #85877D;
+}
+
+.availability-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-height: 48px;
+    padding: 0 22px;
+
+    background-color: #A48952;
+    color: white;
+
+    border: 1px solid transparent;
+    border-radius: 25px;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+
+    cursor: pointer;
+    white-space: nowrap;
+
+    transition:
+        background-color 0.25s ease,
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+/* BUTTON HOVER */
+
+.availability-btn:hover {
+    background-color: #C09C5D;
+
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 6px 18px rgba(0, 0, 0, 0.28),
+        0 0 12px rgba(201, 168, 106, 0.35);
+}
+
+/* BUTTON CLICK */
+
+.availability-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* KEYBOARD ACCESSIBILITY */
+
+.availability-btn:focus-visible {
+    outline: 3px solid #E8C98C;
+    outline-offset: 4px;
+}
+
+/* LABEL HIGHLIGHT WHEN FIELD IS FOCUSED */
+.form-group:focus-within label {
+    color: #E8C98C;
+    transition: color 0.2s ease;
+}
+
+/* REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+    .availability-btn,
+    .form-group input,
+    .form-group select {
+        transition: none;
+    }
+}

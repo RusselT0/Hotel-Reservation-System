@@ -1,104 +1,113 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    const carousel = document.querySelector(
-        ".gallery-carousel"
+    const gallery = document.querySelector(".bv-gallery");
+
+    if (!gallery) return;
+
+    const carousel = gallery.querySelector(".bv-carousel");
+
+    const slides = Array.from(
+        gallery.querySelectorAll(".bv-carousel__slide")
     );
 
-    if (!carousel) return;
+    const prevBtn = gallery.querySelector(".prev");
+    const nextBtn = gallery.querySelector(".next");
 
-    const track = carousel.querySelector(
-        ".gallery-track"
+    const dotsContainer = gallery.querySelector(
+        ".bv-carousel__dots"
     );
 
-    const slides = carousel.querySelectorAll(
-        ".gallery-slide"
-    );
+    const total = slides.length;
+    if (!total) return;
 
-    const prevBtn = carousel.querySelector(".prev");
-    const nextBtn = carousel.querySelector(".next");
+    let current = 0;
 
-    const dotsContainer = document.querySelector(
-        ".gallery-dots"
-    );
+    // CREATE DOTS
+    dotsContainer.replaceChildren();
 
-    let currentSlide = 0;
-    const totalSlides = slides.length;
-
-    if (totalSlides === 0 || !dotsContainer) return;
-
-    // Create indicator dots
-    slides.forEach((slide, index) => {
-
+    slides.forEach((_, index) => {
         const dot = document.createElement("button");
 
         dot.type = "button";
-        dot.classList.add("gallery-dot");
+        dot.className = "bv-carousel__dot";
         dot.setAttribute(
             "aria-label",
-            `Show photo ${index + 1}`
+            `Go to photo ${index + 1}`
         );
 
         dot.addEventListener("click", () => {
-            showSlide(index);
+            updateCarousel(index);
         });
 
         dotsContainer.appendChild(dot);
     });
 
-    const dots = dotsContainer.querySelectorAll(
-        ".gallery-dot"
-    );
+    const dots = Array.from(dotsContainer.children);
 
-    // Display selected slide
-    function showSlide(index) {
+    // UPDATE CAROUSEL
+    function updateCarousel(index) {
 
-        currentSlide =
-            (index + totalSlides) % totalSlides;
+        current = (index + total) % total;
 
-        track.style.transform =
-            `translateX(-${currentSlide * 100}%)`;
+        const previous = (current - 1 + total) % total;
+        const next = (current + 1) % total;
 
-        dots.forEach((dot, dotIndex) => {
+        slides.forEach((slide, i) => {
 
-            const isActive = dotIndex === currentSlide;
+            slide.classList.remove(
+                "is-active",
+                "is-prev",
+                "is-next"
+            );
 
-            dot.classList.toggle("active", isActive);
+            if (i === current) {
+                slide.classList.add("is-active");
+            } else if (i === previous) {
+                slide.classList.add("is-prev");
+            } else if (i === next) {
+                slide.classList.add("is-next");
+            }
 
+            slide.setAttribute(
+                "aria-hidden",
+                String(i !== current)
+            );
+        });
+
+        dots.forEach((dot, i) => {
+            const active = i === current;
+
+            dot.classList.toggle("active", active);
             dot.setAttribute(
                 "aria-pressed",
-                String(isActive)
+                String(active)
             );
         });
     }
 
-    // Next image
-    nextBtn.addEventListener("click", () => {
-        showSlide(currentSlide + 1);
-    });
-
-    // Previous image
+    // NAVIGATION
     prevBtn.addEventListener("click", () => {
-        showSlide(currentSlide - 1);
+        updateCarousel(current - 1);
     });
 
-    // Keyboard navigation
-    carousel.setAttribute("tabindex", "0");
+    nextBtn.addEventListener("click", () => {
+        updateCarousel(current + 1);
+    });
 
+    // KEYBOARD NAVIGATION
     carousel.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            updateCarousel(current - 1);
+        }
 
         if (event.key === "ArrowRight") {
             event.preventDefault();
-            showSlide(currentSlide + 1);
-        }
-
-        if (event.key === "ArrowLeft") {
-            event.preventDefault();
-            showSlide(currentSlide - 1);
+            updateCarousel(current + 1);
         }
     });
 
-    // Show first photo initially
-    showSlide(0);
+    updateCarousel(0);
 
 });

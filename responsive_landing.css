@@ -62,6 +62,17 @@
         height: 48px;
         font-size: 14px;
     }
+    
+    .rooms-controls {
+        left: -12px;
+        right: -12px;
+    }
+
+    .rooms-controls button {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
 }
 
 
@@ -93,28 +104,29 @@
         object-position: 60% 65%;
     }
 
-    /* NAVBAR STAYS ON IMAGE */
-    .hero-visual .navbar {
-        position: absolute;
-
+    .navbar {
+        position: fixed;
         top: 0;
         left: 0;
-        transform: none;
 
         width: 100%;
         height: auto;
-        margin: 0;
 
         display: flex;
         flex-direction: column;
-        align-items: center;
         justify-content: center;
+        align-items: center;
 
         gap: 6px;
         padding: 10px 12px;
 
-        background-color: rgba(0, 0, 0, 0.15);
-        z-index: 3;
+        background-color: rgba(53, 62, 43, 0.15);
+
+        z-index: 1000;
+    }
+
+    .navbar.is-scrolled {
+        background-color: rgba(53, 62, 43, 0.97);
     }
 
     /* LOGO AND HOTEL NAME */
@@ -249,6 +261,53 @@
         font-size: 21px;
         letter-spacing: 2px;
     }
+
+    .rooms-section {
+        padding: 60px 0;
+    }
+
+    .rooms-header {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .rooms-header h2 {
+        font-size: 21px;
+        letter-spacing: 1px;
+    }
+
+    .rooms-description {
+        font-size: 12px;
+    }
+
+    .room-card {
+        flex-basis: 82%;
+        height: 350px;
+    }
+
+    .room-card-content h3 {
+        font-size: 20px;
+    }
+
+    .room-modal {
+        padding: 28px 22px;
+    }
+
+    .rooms-controls {
+        position: absolute;
+        top: 50%;
+
+        left: -8px;
+        right: -8px;
+
+        transform: translateY(-50%);
+    }
+
+    .rooms-controls button {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+    }
 }
 
 
@@ -284,6 +343,19 @@
 
 @media (prefers-reduced-motion: reduce) {
     .gallery-track {
+        transition: none;
+    }
+
+    .room-grid {
+        scroll-behavior: auto;
+    }
+
+    .room-card,
+    .room-card img {
+        transition: none;
+    }
+
+    .navbar {
         transition: none;
     }
 }
