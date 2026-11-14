@@ -214,7 +214,7 @@
     .form-group input,
     .form-group select {
         width: 100%;
-        height: 48x;
+        height: 48px;
         font-size: 14px;
     }
 
@@ -225,13 +225,14 @@
     }
 
     /* GALLERY */
-    .gallery-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+    .gallery-slide img {
+        height: 250px;
     }
 
-    .gallery-grid img {
-        height: 140px;
+    .gallery-control {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
     }
 
     /* ROOM CARDS */
@@ -278,5 +279,11 @@
 
         max-width: 550px;
         margin: 8px auto 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gallery-track {
+        transition: none;
     }
 }

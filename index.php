@@ -8,10 +8,15 @@
 
     <title>Bella Vista Hotel & Events Place</title>
 
-    <link rel="stylesheet" href="landing.css">
-    <link rel="stylesheet" href="global_style.css">
-    <link rel="stylesheet" href="responsive_landing.css">
-</head>
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="global_style.css?v=2">
+
+    <!-- Landing Page Styles -->
+    <link rel="stylesheet" href="landing.css?v=2">
+
+    <!-- Responsive Styles -->
+    <link rel="stylesheet" href="responsive_landing.css?v=2">
+    </head>
 
 <body>
 
@@ -181,32 +186,90 @@
 
             <div class="container">
 
-                <h2 class="section-title">
-                    Photo Gallery
-                </h2>
+                <h2 class="section-title">Photo Gallery</h2>
 
-                <div class="gallery-grid">
+                <p class="gallery-description">
+                    Explore the beauty and comfort of
+                    Bella Vista Hotel & Events Place.
+                </p>
 
-                    <img
-                        src="images/standard room.jfif"
-                        alt="Comfortable hotel bedroom with mountain-inspired interior"
-                    >
+                <div class="gallery-carousel"
+                    aria-label="Hotel photo gallery"
+                    aria-roledescription="carousel">
 
-                    <img
-                        src="images/family room.webp"
-                        alt="Spacious family accommodation at Bella Vista"
-                    >
+                    <div class="gallery-window">
 
-                    <img
-                        src="images/event hall.jfif"
-                        alt="Bella Vista event hall with tables and seating"
-                    >
+                        <div class="gallery-track">
 
-                    <img
-                        src="images/hotel on mountains 2.webp"
-                        alt="Bella Vista hotel exterior during the evening"
-                    >
+                            <!-- IMAGE 1 -->
+                            <figure class="gallery-slide">
+                                <img
+                                    src="images/standard room.jfif"
+                                    alt="Comfortable Standard Room interior"
+                                >
+                                <figcaption>
+                                    Standard Room
+                                </figcaption>
+                            </figure>
 
+                            <!-- IMAGE 2 -->
+                            <figure class="gallery-slide">
+                                <img
+                                    src="images/family room.webp"
+                                    alt="Spacious Family Room interior"
+                                >
+                                <figcaption>
+                                    Family Room
+                                </figcaption>
+                            </figure>
+
+                            <!-- IMAGE 3 -->
+                            <figure class="gallery-slide">
+                                <img
+                                    src="images/event hall.jfif"
+                                    alt="Bella Vista Event Hall interior"
+                                >
+                                <figcaption>
+                                    Event Hall
+                                </figcaption>
+                            </figure>
+
+                            <!-- IMAGE 4 -->
+                            <figure class="gallery-slide">
+                                <img
+                                    src="images/hotel on mountains 2.webp"
+                                    alt="Bella Vista Hotel exterior at night"
+                                >
+                                <figcaption>
+                                    Hotel Exterior
+                                </figcaption>
+                            </figure>
+
+                        </div>
+
+                    </div>
+
+                    <!-- PREVIOUS BUTTON -->
+                    <button
+                        type="button"
+                        class="gallery-control prev"
+                        aria-label="Previous photo">
+                        &#10094;
+                    </button>
+
+                    <!-- NEXT BUTTON -->
+                    <button
+                        type="button"
+                        class="gallery-control next"
+                        aria-label="Next photo">
+                        &#10095;
+                    </button>
+
+                </div>
+
+                <!-- SLIDE INDICATORS -->
+                <div class="gallery-dots"
+                    aria-label="Choose a gallery photo">
                 </div>
 
             </div>
@@ -214,70 +277,70 @@
         </section>
 
 
-        <!-- ROOMS AND FACILITIES -->
-        <section class="rooms-section" id="rooms">
+                <!-- ROOMS AND FACILITIES -->
+                <section class="rooms-section" id="rooms">
 
-            <div class="container">
+                    <div class="container">
 
-                <h2 class="section-title">
-                    Rooms & Facilities Inventory
-                </h2>
+                        <h2 class="section-title">
+                            Rooms & Facilities Inventory
+                        </h2>
 
-                <div class="room-grid">
+                        <div class="room-grid">
 
-                    <!-- STANDARD ROOM -->
-                    <article class="room-card">
+                            <!-- STANDARD ROOM -->
+                            <article class="room-card">
 
-                        <img
-                            src="images/standard room.jfif"
-                            alt="Interior of a Bella Vista Standard Room"
-                        >
+                                <img
+                                    src="images/standard room.jfif"
+                                    alt="Interior of a Bella Vista Standard Room"
+                                >
 
-                        <div class="room-info">
-                            <h3>Standard Room</h3>
-                            <p>Good for 2–3 persons</p>
-                            <span>₱3,500 / night</span>
+                                <div class="room-info">
+                                    <h3>Standard Room</h3>
+                                    <p>Good for 2–3 persons</p>
+                                    <span>₱3,500 / night</span>
+                                </div>
+
+                            </article>
+
+                            <!-- FAMILY ROOM -->
+                            <article class="room-card">
+
+                                <img
+                                    src="images/family room.webp"
+                                    alt="Interior of a Bella Vista Family Room"
+                                >
+
+                                <div class="room-info">
+                                    <h3>Family Room</h3>
+                                    <p>Good for up to 5 persons</p>
+                                    <span>₱6,000 / night</span>
+                                </div>
+
+                            </article>
+
+                            <!-- EVENT HALL -->
+                            <article class="room-card">
+
+                                <img
+                                    src="images/event hall.jfif"
+                                    alt="Bella Vista Event Hall for celebrations and gatherings"
+                                >
+
+                                <div class="room-info">
+                                    <h3>Event Hall</h3>
+                                    <p>30 guests included, maximum 40</p>
+                                    <span>₱15,000 / night</span>
+                                </div>
+
+                            </article>
+
                         </div>
 
-                    </article>
+                    </div>
 
-                    <!-- FAMILY ROOM -->
-                    <article class="room-card">
-
-                        <img
-                            src="images/family room.webp"
-                            alt="Interior of a Bella Vista Family Room"
-                        >
-
-                        <div class="room-info">
-                            <h3>Family Room</h3>
-                            <p>Good for up to 5 persons</p>
-                            <span>₱6,000 / night</span>
-                        </div>
-
-                    </article>
-
-                    <!-- EVENT HALL -->
-                    <article class="room-card">
-
-                        <img
-                            src="images/event hall.jfif"
-                            alt="Bella Vista Event Hall for celebrations and gatherings"
-                        >
-
-                        <div class="room-info">
-                            <h3>Event Hall</h3>
-                            <p>30 guests included, maximum 40</p>
-                            <span>₱15,000 / night</span>
-                        </div>
-
-                    </article>
-
-                </div>
-
-            </div>
-
-        </section>
+                </section>
 
     </main>
 
@@ -298,6 +361,8 @@
         </p>
 
     </footer>
+
+    <script src="gallery.js" defer></script>
 
 </body>
 </html>
