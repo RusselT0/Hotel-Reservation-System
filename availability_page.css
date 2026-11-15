@@ -1,0 +1,271 @@
+
+/* =====================================
+   BELLA VISTA AVAILABILITY PAGE
+===================================== */
+
+.avp-header {
+    display: flex;
+    flex-direction: column;
+
+    background: #34402b;
+
+    /* Reserve space for the fixed navbar */
+    padding-top: 63px;
+    padding-bottom: 28px;
+}
+
+.avp-header .navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    width: 100%;
+    z-index: 1000;
+
+    transform: none;
+    box-sizing: border-box;
+}
+
+/* SEARCH FORM CONTAINER */
+.avp-search-container {
+    max-width: 1200px;
+    margin: 20px auto 0;
+    padding: 0 20px;
+}
+
+.avp-search-container .availability-form {
+    position: static;
+    transform: none;
+    inset: auto;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.3fr 0.8fr auto;
+    gap: 15px;
+    align-items: end;
+
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.avp-search-form .form-group {
+    min-width: 0;
+}
+
+.avp-search-form .form-group input,
+.avp-search-form .form-group select {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.avp-search-form .availability-btn {
+    min-width: 130px;
+}
+
+/* MAIN PAGE */
+.avp-main {
+    background: #f7f7f2;
+    min-height: 80vh;
+    padding: 24px 20px 70px;
+}
+
+.avp-breadcrumb {
+    max-width: 1200px;
+    margin: 0 auto 22px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    font-size: 13px;
+    color: #697363;
+}
+
+.avp-breadcrumb a {
+    color: #60704d;
+    text-decoration: none;
+}
+
+.avp-breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+/* TWO-COLUMN PAGE LAYOUT */
+.avp-layout {
+    max-width: 1200px;
+    margin: 0 auto;
+
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+/* SIDEBAR */
+.avp-filter-panel {
+    background: #ffffff;
+    border: 1px solid #e3e5de;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.avp-filter-panel h2 {
+    padding: 20px;
+    margin: 0;
+
+    font-size: 18px;
+    color: #293524;
+}
+
+.avp-filter-section {
+    padding: 20px;
+    border-top: 1px solid #e8e9e4;
+}
+
+.avp-filter-section h3 {
+    margin: 0 0 12px;
+
+    color: #34402b;
+    font-size: 15px;
+}
+
+.avp-filter-section p {
+    margin: 0;
+
+    color: #818780;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* RESULTS HEADER */
+.avp-results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+
+    margin-bottom: 20px;
+}
+
+.avp-results-header h1 {
+    margin: 0 0 8px;
+
+    font-size: 26px;
+    color: #293524;
+}
+
+.avp-results-header p {
+    margin: 0;
+
+    font-size: 14px;
+    color: #6d7567;
+}
+
+.avp-view-label {
+    padding: 9px 16px;
+
+    background: #ffffff;
+    border: 1px solid #dce0d5;
+    border-radius: 25px;
+
+    font-size: 13px;
+    color: #34402b;
+    white-space: nowrap;
+}
+
+/* ROOM RESULTS LIST */
+.avp-room-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ROOM CARD */
+.avp-room-card {
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr) 180px;
+    gap: 20px;
+
+    padding: 15px;
+
+    background: #ffffff;
+    border: 1px solid #e0e4da;
+    border-radius: 12px;
+
+    box-shadow: 0 3px 12px rgba(0,0,0,0.04);
+    transition: box-shadow 0.2s ease;
+}
+
+.avp-room-card:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09);
+}
+
+.avp-room-details {
+    min-width: 0;
+}
+
+.avp-room-image {
+    width: 100%;
+    height: 195px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.avp-room-details h2 {
+    margin: 4px 0 8px;
+
+    font-size: 20px;
+    color: #34402b;
+}
+
+.avp-room-details p {
+    margin: 7px 0;
+    color: #65705f;
+    font-size: 14px;
+}
+
+.avp-available-text {
+    color: #318053 !important;
+    font-weight: 600;
+}
+
+/* PRICE SECTION */
+.avp-room-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-end;
+    text-align: right;
+    gap: 10px;
+}
+
+.avp-price-label {
+    font-size: 12px;
+    color: #7d8578;
+}
+
+.avp-price {
+    font-size: 23px;
+    font-weight: 700;
+    color: #293524;
+}
+
+.avp-book-btn {
+    padding: 12px 20px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #aa8c52;
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.avp-book-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}

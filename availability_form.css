@@ -162,6 +162,88 @@
     transition: color 0.2s ease;
 }
 
+/* AVAILABILITY VALIDATION MODAL */
+.availability-error-modal {
+    width: min(90%, 420px);
+    max-width: 420px;
+    margin: auto;
+    padding: 0;
+
+    border: none;
+    border-radius: 14px;
+
+    background: #ffffff;
+    color: #293524;
+
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.25);
+}
+
+/* Dark overlay */
+.availability-error-modal::backdrop {
+    background: rgba(0, 0, 0, 0.60);
+}
+
+/* Modal content */
+.availability-error-content {
+    padding: 35px 30px;
+    text-align: center;
+}
+
+/* Error icon */
+.availability-error-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 55px;
+    height: 55px;
+
+    margin: 0 auto 18px;
+
+    border-radius: 50%;
+
+    background: #fce8e6;
+    color: #b43e3e;
+
+    font-size: 30px;
+    font-weight: bold;
+}
+
+/* Heading */
+.availability-error-content h2 {
+    margin-bottom: 12px;
+
+    font-size: 22px;
+    color: #293524;
+}
+
+/* Error message */
+.availability-error-content p {
+    margin-bottom: 25px;
+
+    font-size: 15px;
+    line-height: 1.6;
+    color: #666666;
+}
+
+/* Close button */
+.availability-error-close {
+    padding: 12px 28px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #a78c51;
+    color: #ffffff;
+
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.availability-error-close:hover {
+    background: #927744;
+}
+
 /* REDUCED MOTION */
 
 @media (prefers-reduced-motion: reduce) {

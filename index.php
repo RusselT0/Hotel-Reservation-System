@@ -1,3 +1,30 @@
+<?php
+
+require_once 'database.php';
+
+try {
+
+    // Retrieve active room/facility types
+    $sql = "SELECT room_Type_ID, room_Type
+            FROM Room_Type
+            WHERE deleted_At IS NULL
+            ORDER BY room_Type ASC";
+
+    // Execute the query
+    $stmt = $pdo->query($sql);
+
+    // Store the results in an array
+    $roomTypes = $stmt->fetchAll();
+
+} catch (PDOException $e) {
+
+    error_log($e->getMessage());
+    $roomTypes = [];
+
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -9,8 +36,8 @@
     <title>Bella Vista Hotel & Events Place</title>
 
     <link rel="stylesheet" href="global_style.css">
-    <link rel="stylesheet" href="landing.css">
-    <link rel="stylesheet" href="availability_form.css">
+    <link rel="stylesheet" href="landing.css?v=2">
+    <link rel="stylesheet" href="availability_form.css?v=2">
     <link rel="stylesheet" href="photo_gallery.css">
     <link rel="stylesheet" href="rooms_facilities.css">
     <link rel="stylesheet" href="responsive_landing.css">
@@ -75,29 +102,41 @@
     </div>
 
         <!-- BOOKING AVAILABILITY FORM -->
-        <form class="availability-form">
+        <form class="availability-form"
+            id="availabilityForm"
+            action="availability.php"
+            method="GET"
+            novalidate>
 
             <div class="form-group">
                 <label for="checkin">Check-in Date</label>
                 <input type="date"
                        id="checkin"
-                       name="checkin">
+                       name="checkin"
+                       required>
             </div>
 
             <div class="form-group">
                 <label for="checkout">Check-out Date</label>
                 <input type="date"
                        id="checkout"
-                       name="checkout">
+                       name="checkout"
+                       required>
             </div>
 
             <div class="form-group">
                 <label for="facility">Room/Facility Type</label>
-                <select id="facility" name="facility">
+                <select id="facility" name="facility" required>
                     <option value="">Select Type</option>
-                    <option value="standard">Standard Room</option>
-                    <option value="family">Family Room</option>
-                    <option value="event">Event Hall</option>
+                    <?php foreach ($roomTypes as $type): ?>
+                        <option value="<?= (int) $type['room_Type_ID']; ?>">
+                            <?= htmlspecialchars(
+                                $type['room_Type'],
+                                ENT_QUOTES,
+                                'UTF-8'
+                            ); ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 
@@ -107,10 +146,11 @@
                        id="guests"
                        name="guests"
                        min="1"
-                       placeholder="# of guests">
+                       placeholder="# of guests"
+                       required>
             </div>
 
-            <button type="button" class="availability-btn">
+            <button type="submit" class="availability-btn">
                 <span class="search-icon" aria-hidden="true">
                     &#9906;
                 </span>
@@ -118,6 +158,30 @@
             </button>
 
         </form>
+
+
+        <!-- AVAILABILITY VALIDATION MODAL -->
+        <dialog id="availabilityErrorModal" class="availability-error-modal">
+
+            <div class="availability-error-content">
+
+                <span class="availability-error-icon">
+                    !
+                </span>
+
+                <h2>Unable to Check Availability</h2>
+
+                <p id="availabilityErrorMessage"></p>
+
+                <button type="button"
+                        id="closeAvailabilityError"
+                        class="availability-error-close">
+                    OK, Got It
+                </button>
+
+            </div>
+
+        </dialog>
 
     </header>
 
@@ -451,5 +515,6 @@
     <script src="gallery.js" defer></script>
     <script src="rooms_facilities.js" defer></script>
     <script src="navbar.js" defer></script>
+    <script src="availability_validation.js" defer></script>
 </body>
 </html>

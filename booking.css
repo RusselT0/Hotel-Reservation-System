@@ -1,0 +1,184 @@
+
+/* ========================================
+   GUEST INFORMATION FORM
+======================================== */
+
+.guest-information {
+    margin-top: 30px;
+    padding: 25px;
+
+    background: #ffffff;
+    border: 1px solid #e0e4da;
+    border-radius: 12px;
+}
+
+.guest-information h2 {
+    color: #34402b;
+    margin-bottom: 10px;
+}
+
+.guest-information > p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+/* Form layout */
+.guest-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.guest-form-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 8px;
+}
+
+.guest-form-group label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #34402b;
+}
+
+.guest-form-group input {
+    width: 100%;
+    min-width: 0;
+    height: 48px;
+
+    padding: 12px;
+
+    border: 1px solid #d7dbd0;
+    border-radius: 8px;
+
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.guest-form-group input:focus {
+    outline: 2px solid #a78c51;
+    outline-offset: 1px;
+}
+
+/* Continue button */
+.guest-continue-btn {
+    margin-top: 25px;
+    padding: 13px 25px;
+
+    background: #a78c51;
+    color: white;
+
+    border: none;
+    border-radius: 8px;
+
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.guest-continue-btn:hover {
+    background: #927744;
+}
+
+/* Error messages */
+.guest-error {
+    color: #b43e3e !important;
+    font-weight: 500;
+}
+
+
+/* OPTIONAL ADD-ONS */
+
+.booking-addons {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e4da;
+}
+
+.booking-addons h3 {
+    color: #34402b;
+    margin-bottom: 8px;
+}
+
+.booking-addons > p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.booking-addon-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+
+    padding: 15px 0;
+    border-bottom: 1px solid #e8eae5;
+}
+
+.booking-addon-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.booking-addon-info strong {
+    color: #34402b;
+}
+
+.booking-addon-info span {
+    color: #666;
+    font-size: 14px;
+}
+
+.booking-addon-quantity {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.booking-addon-quantity label {
+    font-size: 12px;
+}
+
+.booking-addon-quantity input {
+    width: 75px;
+    padding: 10px;
+
+    border: 1px solid #d7dbd0;
+    border-radius: 8px;
+}
+
+/* BOOKING BREAKDOWN TEMPORARY*/
+
+.booking-breakdown {
+    margin-top: 25px;
+    padding: 25px;
+
+    background: #f7f7f2;
+    border: 1px solid #e0e4da;
+    border-radius: 12px;
+}
+
+.booking-breakdown h3 {
+    color: #34402b;
+    margin-bottom: 15px;
+}
+
+.booking-breakdown h4 {
+    color: #34402b;
+    margin: 20px 0 10px;
+}
+
+.booking-breakdown p {
+    margin-bottom: 12px;
+}
+
+.booking-subtotal {
+    font-size: 18px;
+    color: #34402b;
+}
+
+.booking-fee-notice {
+    color: #a66a26;
+    font-size: 14px;
+}
