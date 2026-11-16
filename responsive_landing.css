@@ -144,6 +144,181 @@
         box-sizing: border-box;
         z-index: 1000;
     }
+
+    
+    /* ==========================================
+    BOOKING PAGE - TABLET
+    ========================================== */
+
+    /* Reserve enough space for fixed navbar */
+    .booking-header {
+        padding-top: 125px;
+        padding-bottom: 0;
+    }
+
+    .booking-header .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+
+        width: 100%;
+        height: auto;
+        box-sizing: border-box;
+
+        transform: none;
+        z-index: 1000;
+    }
+
+    /* Main booking content */
+    .bk-page {
+        padding: 25px 20px 60px;
+    }
+
+    /* Force single-column booking layout */
+    .bk-page .bk-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 22px;
+    }
+
+    .bk-page .bk-main-column,
+    .bk-page .bk-summary-column {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    /* Booking summary above guest form */
+    .bk-page .bk-summary-column {
+        order: -1;
+    }
+
+    .bk-page .bk-summary-card {
+        position: static;
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* Prevent guest information from squeezing */
+    .bk-page .bk-panel {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .bk-page .bk-fields-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .bk-page .bk-field {
+        min-width: 0;
+    }
+
+    .bk-page .bk-field input {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    /* Room image */
+    .bk-page .bk-room-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    /* ========================================
+    BOOKING CREATED - TABLET
+    ======================================== */
+
+    .bc-page {
+        padding: 25px 20px 60px;
+    }
+
+    .bc-page .bc-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 22px;
+    }
+
+    .bc-main-column,
+    .bc-summary-column {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .bc-summary-card {
+        position: static;
+    }
+
+    .bc-summary-column {
+        order: -1;
+    }
+
+    .bc-room-image {
+        height: 220px;
+    }
+
+    /* ========================================
+    BOOKING CREATED HEADER - TABLET
+    ======================================== */
+
+    .booking-created-header {
+        width: 100%;
+        height: 125px;
+
+        padding: 0;
+        margin: 0;
+
+        background: #34402b;
+        box-sizing: border-box;
+    }
+
+    .booking-created-header .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+
+        width: 100%;
+        height: auto;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: nowrap;
+
+        gap: 8px;
+        padding: 10px 12px;
+
+        background: #34402b;
+        box-sizing: border-box;
+
+        transform: none;
+        z-index: 1000;
+    }
+
+    .booking-created-header .nav-links {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: nowrap;
+
+        width: 100%;
+        max-width: 100%;
+        gap: 12px;
+    }
+
+    .booking-created-header .nav-links a {
+        font-size: clamp(10px, 1.4vw, 13px);
+        white-space: nowrap;
+        text-align: center;
+    }
+
 }
 
 
@@ -667,6 +842,436 @@
     .guest-continue-btn {
         width: 100%;
     }
+
+    /* ==========================================
+    BOOKING PAGE - MOBILE
+    ========================================== */
+
+    /* Header and fixed navbar */
+    .booking-header {
+        padding-top: 112px;
+        padding-bottom: 0;
+    }
+
+    .booking-header .navbar {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        gap: 8px;
+        padding: 10px 12px;
+
+        width: 100%;
+        height: auto;
+        box-sizing: border-box;
+    }
+
+    /* Keep navigation links in one row */
+    .booking-header .nav-links {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+
+        justify-content: center;
+        align-items: center;
+
+        width: 100%;
+        max-width: 100%;
+        gap: 7px;
+    }
+
+    .booking-header .nav-links a {
+        font-size: clamp(9px, 2.3vw, 12px);
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    /* Main page */
+    .bk-page {
+        padding: 22px 12px 50px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .bk-container {
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* Heading */
+    .bk-page-heading {
+        margin-bottom: 22px;
+    }
+
+    .bk-page-heading h1 {
+        font-size: clamp(23px, 6vw, 28px);
+        line-height: 1.25;
+    }
+
+    .bk-page-heading p {
+        line-height: 1.6;
+        overflow-wrap: break-word;
+    }
+
+    /* Single-column booking layout */
+    .bk-page .bk-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+    }
+
+    /* Booking cards */
+    .bk-page .bk-panel {
+        width: 100%;
+        min-width: 0;
+        padding: 20px 16px;
+        box-sizing: border-box;
+    }
+
+    .bk-panel-heading {
+        gap: 12px;
+    }
+
+    .bk-panel-heading > div {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .bk-panel-heading h2 {
+        font-size: 19px;
+        line-height: 1.35;
+    }
+
+    /* Guest information */
+    .bk-page .bk-fields-grid,
+    .bk-page .bk-review-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    .bk-page .bk-field,
+    .bk-page .bk-field input {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    /* Room summary */
+    .bk-page .bk-summary-column {
+        order: -1;
+    }
+
+    .bk-page .bk-summary-card {
+        position: static;
+        width: 100%;
+    }
+
+    .bk-page .bk-room-image {
+        width: 100%;
+        height: 210px;
+        object-fit: cover;
+    }
+
+    .bk-summary-content {
+        padding: 20px 16px;
+    }
+
+    .bk-summary-content h2 {
+        font-size: 20px;
+    }
+
+    .bk-details-grid {
+        gap: 15px 10px;
+    }
+
+    .bk-price-row {
+        flex-wrap: wrap;
+    }
+
+    /* Add-ons */
+    .bk-addon-row {
+        gap: 12px;
+    }
+
+    .bk-addon-info {
+        min-width: 0;
+    }
+
+    /* Terms */
+    .bk-terms {
+        width: 100%;
+        min-width: 0;
+        padding: 16px;
+        box-sizing: border-box;
+    }
+
+    .bk-terms li {
+        overflow-wrap: break-word;
+        word-break: normal;
+        line-height: 1.65;
+    }
+
+    .bk-feedback-content {
+        padding: 25px 20px;
+    }
+
+    .bk-feedback-content h2 {
+        font-size: 20px;
+    }
+
+    /* ========================================
+    BOOKING CREATED - MOBILE
+    ======================================== */
+
+    .bc-page {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+
+        padding: 22px 12px 50px;
+        box-sizing: border-box;
+    }
+
+    .bc-container {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .bc-heading h1 {
+        font-size: clamp(23px, 6vw, 28px);
+        line-height: 1.25;
+    }
+
+    .bc-heading p {
+        overflow-wrap: break-word;
+    }
+
+    .bc-page .bc-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+    }
+
+    .bc-card {
+        padding: 20px 16px;
+    }
+
+    .bc-section-heading {
+        gap: 12px;
+    }
+
+    .bc-section-heading h2 {
+        font-size: 19px;
+    }
+
+    .bc-amount-panel {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .bc-amount-panel strong {
+        font-size: 22px;
+    }
+
+    .bc-summary-card {
+        position: static;
+        width: 100%;
+    }
+
+    .bc-room-image {
+        width: 100%;
+        height: 210px;
+        object-fit: cover;
+    }
+
+    .bc-summary-content {
+        padding: 20px 16px;
+    }
+
+    .bc-details-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px 10px;
+    }
+
+    .bc-price-row {
+        flex-wrap: wrap;
+    }
+
+    .bc-info-row {
+        flex-wrap: wrap;
+    }
+
+    .bc-feedback-modal {
+        width: calc(100vw - 32px);
+    }
+
+    .bc-modal-content {
+        padding: 25px 20px;
+    }
+
+    /* ========================================
+    BOOKING CREATED - MOBILE
+    ======================================== */
+
+    .bc-page {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+
+        padding: 22px 12px 50px;
+        box-sizing: border-box;
+    }
+
+    .bc-container {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .bc-heading h1 {
+        font-size: clamp(23px, 6vw, 28px);
+        line-height: 1.25;
+    }
+
+    .bc-heading p {
+        overflow-wrap: break-word;
+    }
+
+    .bc-page .bc-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+    }
+
+    .bc-card {
+        padding: 20px 16px;
+    }
+
+    .bc-section-heading {
+        gap: 12px;
+    }
+
+    .bc-section-heading h2 {
+        font-size: 19px;
+    }
+
+    .bc-amount-panel {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .bc-amount-panel strong {
+        font-size: 22px;
+    }
+
+    .bc-summary-card {
+        position: static;
+        width: 100%;
+    }
+
+    .bc-room-image {
+        width: 100%;
+        height: 210px;
+        object-fit: cover;
+    }
+
+    .bc-summary-content {
+        padding: 20px 16px;
+    }
+
+    .bc-details-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px 10px;
+    }
+
+    .bc-price-row {
+        flex-wrap: wrap;
+    }
+
+    .bc-info-row {
+        flex-wrap: wrap;
+    }
+
+    .bc-feedback-modal {
+        width: calc(100vw - 32px);
+    }
+
+    .bc-modal-content {
+        padding: 25px 20px;
+    }
+
+    /* ========================================
+    BOOKING CREATED HEADER - MOBILE
+    ======================================== */
+
+    .booking-created-header {
+        width: 100%;
+        height: 110px;
+        padding: 0;
+        margin: 0;
+
+        background: #34402b;
+        box-sizing: border-box;
+    }
+
+    .booking-created-header .navbar {
+        width: 100%;
+        height: auto;
+
+        padding: 10px 10px;
+        gap: 6px;
+
+        background: #34402b;
+        box-sizing: border-box;
+    }
+
+    /* Logo and hotel name */
+    .booking-created-header .logo {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .booking-created-header .hotel-logo {
+        width: 42px;
+        height: 42px;
+        object-fit: contain;
+    }
+
+    .booking-created-header .logo-text {
+        font-size: clamp(15px, 4vw, 18px);
+        white-space: nowrap;
+    }
+
+    /* Keep all navigation links in one row */
+    .booking-created-header .nav-links {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: nowrap;
+
+        width: 100%;
+        min-width: 0;
+        gap: 6px;
+    }
+
+    .booking-created-header .nav-links a {
+        font-size: clamp(9px, 2.3vw, 11px);
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    /* Content begins after the header */
+    .bc-page {
+        padding: 22px 12px 50px;
+    }
+
 }
 
 
