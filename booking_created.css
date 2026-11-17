@@ -585,14 +585,10 @@
 
 .booking-created-header {
     width: 100%;
-    height: 60px;
+    height: 64px;
     padding: 0;
     margin: 0;
 
     background: #34402b;
     box-sizing: border-box;
-}
-
-.booking-created-header .navbar {
-    background: #34402b;
 }

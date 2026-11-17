@@ -219,9 +219,9 @@ if (!empty($paymentError)) {
     </title>
 
     <link rel="stylesheet" href="global_style.css">
-    <link rel="stylesheet" href="landing.css?v=2">
-    <link rel="stylesheet" href="booking_created.css?v=2">
-    <link rel="stylesheet" href="responsive_landing.css?v=16">
+    <link rel="stylesheet" href="landing.css?v=3">
+    <link rel="stylesheet" href="booking_created.css?v=3">
+    <link rel="stylesheet" href="responsive_landing.css?v=18">
 </head>
 
 <body>
@@ -230,7 +230,7 @@ if (!empty($paymentError)) {
 <header class="booking-created-header">
             <nav class="navbar">
                     
-                <a href="#home" class="logo">
+                <a href="index.php" class="logo">
                     <img
                         src="images/logo-removebg.png"
                         alt="Bella Vista Hotel & Events Place Logo"
@@ -244,9 +244,9 @@ if (!empty($paymentError)) {
                 </a>
 
                 <div class="nav-links">
-                    <a href="#about">About Us</a>
-                    <a href="#gallery">Gallery</a>
-                    <a href="#rooms">Rooms & Facilities</a>
+                    <a href="index.php#about">About Us</a>
+                    <a href="index.php#gallery">Gallery</a>
+                    <a href="index.php#rooms">Rooms & Facilities</a>
                     <a href="login.php">Sign In / Register</a>
                 </div>
 
@@ -825,7 +825,7 @@ if (!empty($paymentError)) {
 
         </footer>
 
+        <script src="navbar.js?v=2" defer></script>
         <script src="booking_created.js?v=1" defer></script>
-        <script src="navbar.js?v=1" defer></script>
 </body>
 </html>

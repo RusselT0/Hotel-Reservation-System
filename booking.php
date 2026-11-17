@@ -506,7 +506,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
 <!-- NAVIGATION -->
             <nav class="navbar">
                     
-                <a href="#home" class="logo">
+                <a href="index.php" class="logo">
                     <img
                         src="images/logo-removebg.png"
                         alt="Bella Vista Hotel & Events Place Logo"
@@ -520,9 +520,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                 </a>
 
                 <div class="nav-links">
-                    <a href="#about">About Us</a>
-                    <a href="#gallery">Gallery</a>
-                    <a href="#rooms">Rooms & Facilities</a>
+                    <a href="index.php#about">About Us</a>
+                    <a href="index.php#gallery">Gallery</a>
+                    <a href="index.php#rooms">Rooms & Facilities</a>
                     <a href="login.php">Sign In / Register</a>
                 </div>
 
