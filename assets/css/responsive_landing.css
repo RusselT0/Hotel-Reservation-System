@@ -1384,6 +1384,22 @@
         grid-template-columns: minmax(0, 1fr);
         gap: 20px;
     }
+
+    /* ROOM DETAILS MODAL - MOBILE */
+    #roomModalBeds,
+    #roomModalFeatures {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    .room-modal-section {
+        margin: 18px 0;
+        padding-top: 16px;
+    }
+
+    #roomModalPrice {
+        font-size: 21px;
+    }
 }
 
 

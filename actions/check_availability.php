@@ -1,4 +1,3 @@
-
 <?php
 
 header('Content-Type: application/json; charset=utf-8');
@@ -105,7 +104,7 @@ if ($checkoutDate <= $checkinDate) {
 // Connect to MySQL
 try {
 
-    require_once __DIR__ . '/database.php';
+    require_once __DIR__ . '/../includes/database.php';
 
     // Get hotel check-in and checkout times
     $settings = $pdo->query(

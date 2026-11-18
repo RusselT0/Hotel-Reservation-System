@@ -1,6 +1,6 @@
 <?php
 
-require_once 'database.php';
+require_once __DIR__ . '/includes/database.php';
 
 try {
 
@@ -23,6 +23,7 @@ try {
 
 }
 
+require_once __DIR__ . '/includes/room_catalog.php';
 ?>
 
 <!DOCTYPE html>
@@ -35,12 +36,12 @@ try {
 
     <title>Bella Vista Hotel & Events Place</title>
 
-    <link rel="stylesheet" href="global_style.css">
-    <link rel="stylesheet" href="landing.css?v=2">
-    <link rel="stylesheet" href="availability_form.css?v=2">
-    <link rel="stylesheet" href="photo_gallery.css">
-    <link rel="stylesheet" href="rooms_facilities.css">
-    <link rel="stylesheet" href="responsive_landing.css">
+    <link rel="stylesheet" href="assets/css/global_style.css">
+    <link rel="stylesheet" href="assets/css/landing.css?v=2">
+    <link rel="stylesheet" href="assets/css/availability_form.css?v=2">
+    <link rel="stylesheet" href="assets/css/photo_gallery.css?v=2">
+    <link rel="stylesheet" href="assets/css/rooms_facilities.css?v=4">
+    <link rel="stylesheet" href="assets/css/responsive_landing.css">
 
     </head>
 
@@ -51,7 +52,7 @@ try {
                     
                 <a href="#home" class="logo">
                     <img
-                        src="images/logo-removebg.png"
+                        src="assets/images/logo-removebg.png"
                         alt="Bella Vista Hotel & Events Place Logo"
                         class="hotel-logo"
                     >
@@ -66,7 +67,7 @@ try {
                     <a href="#about">About Us</a>
                     <a href="#gallery">Gallery</a>
                     <a href="#rooms">Rooms & Facilities</a>
-                    <a href="login.php">Sign In / Register</a>
+                    <a href="pages/login.php">Sign In / Register</a>
                 </div>
 
             </nav>
@@ -78,7 +79,7 @@ try {
 
             <!-- HERO IMAGE -->
             <img
-                src="images/hero.webp"
+                src="assets/images/hero.webp"
                 alt="Bella Vista Hotel exterior with mountain scenery"
                 class="hero-image"
             >
@@ -104,7 +105,7 @@ try {
         <!-- BOOKING AVAILABILITY FORM -->
         <form class="availability-form"
             id="availabilityForm"
-            action="availability.php"
+            action="pages/availability.php"
             method="GET"
             novalidate>
 
@@ -269,7 +270,7 @@ try {
 
                         <!-- STANDARD ROOM -->
                         <figure class="bv-carousel__slide is-active">
-                            <img src="images/standard room.jfif"
+                            <img src="assets/images/standard room.jfif"
                                 alt="Bella Vista Standard Room interior">
 
                             <figcaption>Standard Room</figcaption>
@@ -277,7 +278,7 @@ try {
 
                         <!-- FAMILY ROOM -->
                         <figure class="bv-carousel__slide is-next">
-                            <img src="images/family room.webp"
+                            <img src="assets/images/family room.webp"
                                 alt="Bella Vista Family Room interior">
 
                             <figcaption>Family Room</figcaption>
@@ -285,7 +286,7 @@ try {
 
                         <!-- EVENT HALL -->
                         <figure class="bv-carousel__slide">
-                            <img src="images/event hall.jfif"
+                            <img src="assets/images/event hall.jfif"
                                 alt="Bella Vista Event Hall interior">
 
                             <figcaption>Event Hall</figcaption>
@@ -293,7 +294,7 @@ try {
 
                         <!-- HOTEL EXTERIOR -->
                         <figure class="bv-carousel__slide is-prev">
-                            <img src="images/hotel on mountains 2.webp"
+                            <img src="assets/images/hotel on mountains 2.webp"
                                 alt="Bella Vista Hotel exterior">
 
                             <figcaption>Hotel Exterior</figcaption>
@@ -368,89 +369,67 @@ try {
                     aria-label="Rooms and facilities"
                     tabindex="0">
 
-                    <!-- STANDARD ROOM -->
-                    <article class="room-card">
+                    <?php foreach ($catalogRooms as $room): ?>
 
-                        <button type="button"
+                        <?php
+
+                            $included = (int)$room['included_Guests'];
+                            $maximum = (int)$room['max_Guests'];
+
+                            $capacity = $included === $maximum
+                                ? $maximum . ' Guests'
+                                : $included . '–' . $maximum . ' Guests';
+
+                            $roomDetails = json_encode(
+                                $room,
+                                JSON_INVALID_UTF8_SUBSTITUTE
+                            );
+
+                        ?>
+
+                        <article class="room-card">
+
+                            <button
+                                type="button"
                                 class="room-card-open"
-                                data-room="standard"
-                                aria-label="View Standard Room details">
+                                data-room="<?= (int)$room['room_Type_ID'] ?>"
+                                data-room-details="<?= catalogEscape($roomDetails) ?>"
+                                aria-label="View <?= catalogEscape($room['room_Type']) ?> details"
+                            >
 
-                            <img src="images/standard room.jfif"
-                                alt="Bella Vista Standard Room">
+                                <img
+                                    src="<?= catalogEscape($room['image']) ?>"
+                                    alt="<?= catalogEscape($room['room_Type']) ?>"
+                                >
 
-                            <div class="room-card-content">
+                                <div class="room-card-content">
 
-                                <span class="room-view">
-                                    View Details &#8599;
-                                </span>
+                                    <span class="room-view">
+                                        View Details &#8599;
+                                    </span>
 
-                                <h3>Standard Room</h3>
-                                <p>2–3 Guests</p>
+                                    <h3>
+                                        <?= catalogEscape($room['room_Type']) ?>
+                                    </h3>
 
-                                <strong>₱3,500 / night</strong>
+                                    <p>
+                                        <?= catalogEscape($capacity) ?>
+                                    </p>
 
-                            </div>
+                                    <strong>
+                                        ₱<?= number_format(
+                                            (float)$room['base_Price'],
+                                            0
+                                        ) ?> / night
+                                    </strong>
 
-                        </button>
+                                </div>
 
-                    </article>
+                            </button>
 
-                    <!-- FAMILY ROOM -->
-                    <article class="room-card">
+                        </article>
 
-                        <button type="button"
-                                class="room-card-open"
-                                data-room="family"
-                                aria-label="View Family Room details">
-
-                            <img src="images/family room.webp"
-                                alt="Bella Vista Family Room">
-
-                            <div class="room-card-content">
-
-                                <span class="room-view">
-                                    View Details &#8599;
-                                </span>
-
-                                <h3>Family Room</h3>
-                                <p>Up to 5 Guests</p>
-
-                                <strong>₱6,000 / night</strong>
-
-                            </div>
-
-                        </button>
-
-                    </article>
-
-                    <!-- EVENT HALL -->
-                    <article class="room-card">
-
-                        <button type="button"
-                                class="room-card-open"
-                                data-room="event"
-                                aria-label="View Event Hall details">
-
-                            <img src="images/event hall.jfif"
-                                alt="Bella Vista Event Hall">
-
-                            <div class="room-card-content">
-
-                                <span class="room-view">
-                                    View Details &#8599;
-                                </span>
-
-                                <h3>Event Hall</h3>
-                                <p>30–40 Guests</p>
-
-                                <strong>₱15,000 / night</strong>
-
-                            </div>
-
-                        </button>
-
-                    </article>
+                    <?php endforeach; ?>
 
                 </div>
 
@@ -459,40 +438,65 @@ try {
         </section>
 
         <!-- ROOM DETAILS MODAL -->
-        <dialog id="roomDetailsModal" class="room-modal">
+        <dialog
+            id="roomDetailsModal"
+            class="room-modal"
+            aria-labelledby="roomModalTitle"
+            data-catalog-error="<?= catalogEscape($roomCatalogError) ?>"
+        >
 
-            <button type="button"
-                    class="room-modal-close"
-                    aria-label="Close room details">
+            <button
+                type="button"
+                class="room-modal-close"
+                aria-label="Close room details"
+            >
                 &times;
             </button>
 
             <h2 id="roomModalTitle">Room Details</h2>
 
-            <p id="roomModalCapacity"></p>
+            <div id="roomModalDetails">
 
-            <p id="roomModalPrice"></p>
+                <p id="roomModalCapacity"></p>
 
-            <p id="roomModalDescription"></p>
+                <p id="roomModalPrice"></p>
 
-            <p id="roomModalFee"></p>
+                <p id="roomModalFee"></p>
 
-            <button type="button"
-                    class="room-book-btn"
-                    disabled>
-                Book Now
+                <!-- BED CONFIGURATION -->
+
+                <div class="room-modal-section" id="roomModalBedSection">
+
+                    <h3>Bed Configuration</h3>
+
+                    <ul id="roomModalBeds"></ul>
+
+                </div>
+
+                <!-- ROOM FEATURES -->
+
+                <div class="room-modal-section" id="roomModalFeatureSection">
+
+                    <h3>Features & Amenities</h3>
+
+                    <ul id="roomModalFeatures"></ul>
+
+                </div>
+
+            </div>
+
+            <button
+                type="button"
+                class="room-book-btn"
+            >
+                Check Availability
             </button>
 
-            <p class="room-modal-note">
-                Online booking will be available when
-                the reservation module is implemented.
-            </p>
+            <p class="room-modal-note"></p>
 
         </dialog>
 
-
     </main>
-
 
     <!-- FOOTER -->
     <footer class="footer">
@@ -512,9 +516,9 @@ try {
     </footer>
 
     
-    <script src="gallery.js" defer></script>
-    <script src="rooms_facilities.js" defer></script>
-    <script src="navbar.js" defer></script>
-    <script src="availability_validation.js" defer></script>
+    <script src="assets/js/gallery.js" defer></script>
+    <script src="assets/js/rooms_facilities.js?v=2" defer></script>
+    <script src="assets/js/navbar.js" defer></script>
+    <script src="assets/js/availability_validation.js" defer></script>
 </body>
 </html>

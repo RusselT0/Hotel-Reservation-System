@@ -1,4 +1,3 @@
-
 <?php
 
 session_start();
@@ -13,7 +12,7 @@ $booking = $_SESSION['booking_success'] ?? null;
 // a successful reservation submission.
 if (!is_array($booking)) {
 
-    header('Location: index.php');
+    header('Location: ../index.php');
     exit;
 }
 
@@ -34,7 +33,7 @@ function e($value): string {
 // PAYMENT FORM DATA
 // ========================================
 
-require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/../includes/database.php';
 
 // One-time security token for payment submission
 if (empty($_SESSION['payment_token'])) {
@@ -133,15 +132,15 @@ $roomInfo = $roomStmt->fetch(PDO::FETCH_ASSOC) ?: [];
 
 // Match the existing room images
 $roomImages = [
-    'Standard Room' => 'images/standard room.jfif',
-    'Family Room' => 'images/family room.webp',
-    'Event Hall' => 'images/event hall.jfif'
+    'Standard Room' => '../assets/images/standard room.jfif',
+    'Family Room' => '../assets/images/family room.webp',
+    'Event Hall' => '../assets/images/event hall.jfif'
 ];
 
 $roomType = $roomInfo['room_Type'] ?? 'Selected Room';
 
 $roomImage = $roomImages[$roomType]
-    ?? 'images/hero.webp';
+    ?? '../assets/images/hero.webp';
 
 // ========================================
 // CURRENT PAYMENT AND BOOKING STATUS
@@ -218,10 +217,10 @@ if (!empty($paymentError)) {
         Reservation Pending | Bella Vista Hotel
     </title>
 
-    <link rel="stylesheet" href="global_style.css">
-    <link rel="stylesheet" href="landing.css?v=3">
-    <link rel="stylesheet" href="booking_created.css?v=3">
-    <link rel="stylesheet" href="responsive_landing.css?v=18">
+    <link rel="stylesheet" href="../assets/css/global_style.css">
+    <link rel="stylesheet" href="../assets/css/landing.css?v=3">
+    <link rel="stylesheet" href="../assets/css/booking_created.css?v=3">
+    <link rel="stylesheet" href="../assets/css/responsive_landing.css?v=18">
 </head>
 
 <body>
@@ -229,10 +228,10 @@ if (!empty($paymentError)) {
 <!-- NAVIGATION -->
 <header class="booking-created-header">
             <nav class="navbar">
-                    
-                <a href="index.php" class="logo">
+
+                <a href="../index.php" class="logo">
                     <img
-                        src="images/logo-removebg.png"
+                        src="../assets/images/logo-removebg.png"
                         alt="Bella Vista Hotel & Events Place Logo"
                         class="hotel-logo"
                     >
@@ -244,13 +243,13 @@ if (!empty($paymentError)) {
                 </a>
 
                 <div class="nav-links">
-                    <a href="index.php#about">About Us</a>
-                    <a href="index.php#gallery">Gallery</a>
-                    <a href="index.php#rooms">Rooms & Facilities</a>
+                    <a href="../index.php#about">About Us</a>
+                    <a href="../index.php#gallery">Gallery</a>
+                    <a href="../index.php#rooms">Rooms & Facilities</a>
                     <a href="login.php">Sign In / Register</a>
                 </div>
 
-            </nav>
+        </nav>
 </header>
 
 <!-- ========================================
@@ -394,7 +393,7 @@ if (!empty($paymentError)) {
 
                             <form
                                 method="POST"
-                                action="submit_downpayment.php"
+                                action="../actions/submit_downpayment.php"
                                 class="bc-payment-form"
                                 id="bcPaymentForm"
                                 novalidate
@@ -825,7 +824,7 @@ if (!empty($paymentError)) {
 
         </footer>
 
-        <script src="navbar.js?v=2" defer></script>
-        <script src="booking_created.js?v=1" defer></script>
+        <script src="../assets/js/navbar.js?v=2" defer></script>
+        <script src="../assets/js/booking_created.js?v=1" defer></script>
 </body>
 </html>

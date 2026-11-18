@@ -1,503 +1,961 @@
--- BELLA VISTA HOTEL & EVENTS PLACE
--- Database schema for MySQL 8.0.16+ (InnoDB, with enforced CHECK constraints)
--- Based on the RBAC ERD and the customer, admin, and housekeeping flowcharts.
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
 --
--- This is a CREATE-ONLY script: it does not DROP existing tables or data.
--- Import into a NEW database. Review any changes before applying to an existing database.
+-- Host: 127.0.0.1
+-- Generation Time: Nov 18, 2026 at 12:37 PM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
 --
--- Intentional changes to the submitted ERD:
---   * Booking.payment_Status_ID removed; payment status belongs to each Payment.
---   * Payment.payment_Type VARCHAR -> payment_Type_ID FK (Payment_Type lookup).
---   * Housekeeping_Task.task_Status VARCHAR -> housekeeping_Status_ID FK.
---   * Users.account_Status VARCHAR -> account_Status_ID FK.
---   * Added Booking.hold_Expires_At for an optional pending-booking expiry policy.
---   * Added Booking_Room.included_Guests_Snapshot to preserve the original
---     pricing/capacity basis, plus actual checked_In_At/checked_Out_At.
---   * Added deleted_At on records that may later be archived/restored.
---   * Added Hotel_Setting for configurable business policies.
---   * All foreign keys use ON DELETE RESTRICT and ON UPDATE RESTRICT.
---   * Future archive-table design has intentionally NOT been implemented.
+-- Database: `hotel_reservation_system`
 --
--- IMPORTANT: FK constraints do NOT automatically enforce role authorization,
--- booking-date overlap rules, admin approval or room-cleanliness workflows.
 
-CREATE DATABASE IF NOT EXISTS hotel_reservation_system
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_unicode_ci;
+-- --------------------------------------------------------
 
-USE hotel_reservation_system;
-
--- Set Philippine Standard Time (UTC+08:00) for THIS IMPORT CONNECTION.
--- Important: this does not set the timezone for future PHP/MySQL connections.
--- Configure each application connection to '+08:00' and PHP to 'Asia/Manila'.
--- MySQL DATETIME columns do not automatically convert timezones.
-SET SESSION time_zone = '+08:00';
-
--- ============================================================
--- 1. LOOKUP TABLES
--- ============================================================
-
-CREATE TABLE IF NOT EXISTS User_Role (
-    role_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    role_Name VARCHAR(40) NOT NULL,
-    is_Active BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT uq_user_role_name UNIQUE (role_Name)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS Account_Status (
-    account_Status_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    account_Status_Name VARCHAR(40) NOT NULL,
-    is_Active BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT uq_account_status_name UNIQUE (account_Status_Name)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS Booking_Status (
-    booking_Status_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    booking_Status_Name VARCHAR(50) NOT NULL,
-    blocks_Availability BOOLEAN NOT NULL DEFAULT FALSE,
-    requires_Hold_Expiry_Check BOOLEAN NOT NULL DEFAULT FALSE,
-    is_Active BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT uq_booking_status_name UNIQUE (booking_Status_Name)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS Payment_Status (
-    payment_Status_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    payment_Status_Name VARCHAR(40) NOT NULL,
-    counts_As_Paid BOOLEAN NOT NULL DEFAULT FALSE,
-    is_Active BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT uq_payment_status_name UNIQUE (payment_Status_Name)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS Payment_Method (
-    payment_Method_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    payment_Method_Name VARCHAR(60) NOT NULL,
-    is_Active BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT uq_payment_method_name UNIQUE (payment_Method_Name)
-) ENGINE=InnoDB;
-
--- balance_Effect=1 adds to amount paid; -1 subtracts a successful refund.
-CREATE TABLE IF NOT EXISTS Payment_Type (
-    payment_Type_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    payment_Type_Name VARCHAR(40) NOT NULL,
-    balance_Effect TINYINT NOT NULL,
-    is_Active BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT uq_payment_type_name UNIQUE (payment_Type_Name),
-    CONSTRAINT chk_payment_type_effect CHECK (balance_Effect IN (-1, 1))
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS Room_Status (
-    room_Status_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    room_Status_Name VARCHAR(50) NOT NULL,
-    ready_For_Checkin BOOLEAN NOT NULL DEFAULT FALSE,
-    is_Active BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT uq_room_status_name UNIQUE (room_Status_Name)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS Housekeeping_Status (
-    housekeeping_Status_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    housekeeping_Status_Name VARCHAR(50) NOT NULL,
-    is_Active BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT uq_housekeeping_status_name UNIQUE (housekeeping_Status_Name)
-) ENGINE=InnoDB;
-
--- ============================================================
--- 2. USERS AND CONFIGURATION
--- ============================================================
-
-CREATE TABLE IF NOT EXISTS Users (
-    user_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    role_ID INT UNSIGNED NOT NULL,
-    account_Status_ID INT UNSIGNED NOT NULL,
-    first_Name VARCHAR(80) NOT NULL,
-    last_Name VARCHAR(80) NOT NULL,
-    email_Address VARCHAR(190) NOT NULL,
-    phone_Number VARCHAR(25) NULL,
-    password_Hash VARCHAR(255) NULL COMMENT 'NULL for a guest checkout without an account',
-    created_At DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_At DATETIME NULL,
-    -- One row per email, including guest checkouts without a password.
-    -- Repeat guests need a safe existing-user lookup/identity verification flow;
-    -- never authenticate someone merely because they typed a matching email.
-    CONSTRAINT uq_users_email UNIQUE (email_Address),
-    CONSTRAINT fk_users_role FOREIGN KEY (role_ID)
-        REFERENCES User_Role(role_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_users_account_status FOREIGN KEY (account_Status_ID)
-        REFERENCES Account_Status(account_Status_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    INDEX idx_users_role (role_ID),
-    INDEX idx_users_deleted (deleted_At)
-) ENGINE=InnoDB;
-
--- Flexible system-wide policy values. Keep an explicit interpretation/validation
--- in your application; this table does not enforce pricing business rules.
-CREATE TABLE IF NOT EXISTS Hotel_Setting (
-    setting_Key VARCHAR(80) PRIMARY KEY,
-    setting_Value VARCHAR(255) NOT NULL,
-    description VARCHAR(255) NULL,
-    updated_At DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
-
--- ============================================================
--- 3. ROOM CATALOG, FACILITIES AND ADD-ONS
--- ============================================================
-
-CREATE TABLE IF NOT EXISTS Floor (
-    floor_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    floor_Number INT NOT NULL,
-    deleted_At DATETIME NULL,
-    CONSTRAINT uq_floor_number UNIQUE (floor_Number)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS Room_Type (
-    room_Type_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    room_Type VARCHAR(90) NOT NULL,
-    base_Price DECIMAL(12,2) NOT NULL,
-    included_Guests INT UNSIGNED NOT NULL,
-    max_Guests INT UNSIGNED NOT NULL,
-    extra_Person_Fee DECIMAL(12,2) NOT NULL DEFAULT 0.00,
-    deleted_At DATETIME NULL,
-    CONSTRAINT uq_room_type_name UNIQUE (room_Type),
-    CONSTRAINT chk_room_type_prices CHECK (base_Price >= 0 AND extra_Person_Fee >= 0),
-    CONSTRAINT chk_room_type_capacity CHECK (
-        included_Guests >= 1 AND max_Guests >= included_Guests
-    )
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS Room (
-    room_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    room_Type_ID INT UNSIGNED NOT NULL,
-    floor_ID INT UNSIGNED NULL COMMENT 'Optional for facilities such as Event Hall',
-    room_Status_ID INT UNSIGNED NOT NULL,
-    room_Code VARCHAR(40) NOT NULL,
-    deleted_At DATETIME NULL,
-    CONSTRAINT uq_room_code UNIQUE (room_Code),
-    CONSTRAINT fk_room_type FOREIGN KEY (room_Type_ID)
-        REFERENCES Room_Type(room_Type_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_room_floor FOREIGN KEY (floor_ID)
-        REFERENCES Floor(floor_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_room_status FOREIGN KEY (room_Status_ID)
-        REFERENCES Room_Status(room_Status_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    INDEX idx_room_type (room_Type_ID),
-    INDEX idx_room_status (room_Status_ID),
-    INDEX idx_room_deleted (deleted_At)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS Bed_Type (
-    bed_Type_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    bed_Type_Name VARCHAR(80) NOT NULL,
-    deleted_At DATETIME NULL,
-    CONSTRAINT uq_bed_type_name UNIQUE (bed_Type_Name)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS Feature (
-    feature_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    feature_Name VARCHAR(100) NOT NULL,
-    deleted_At DATETIME NULL,
-    CONSTRAINT uq_feature_name UNIQUE (feature_Name)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS Addon (
-    addon_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    addon_Name VARCHAR(100) NOT NULL,
-    addon_Price DECIMAL(12,2) NOT NULL,
-    deleted_At DATETIME NULL,
-    CONSTRAINT uq_addon_name UNIQUE (addon_Name),
-    CONSTRAINT chk_addon_price CHECK (addon_Price >= 0)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS Room_Type_Bed_Type (
-    room_Type_ID INT UNSIGNED NOT NULL,
-    bed_Type_ID INT UNSIGNED NOT NULL,
-    num_Beds INT UNSIGNED NOT NULL,
-    deleted_At DATETIME NULL,
-    PRIMARY KEY (room_Type_ID, bed_Type_ID),
-    CONSTRAINT fk_rtb_room_type FOREIGN KEY (room_Type_ID)
-        REFERENCES Room_Type(room_Type_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_rtb_bed_type FOREIGN KEY (bed_Type_ID)
-        REFERENCES Bed_Type(bed_Type_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT chk_rtb_beds CHECK (num_Beds > 0),
-    INDEX idx_rtb_bed_type (bed_Type_ID)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS Room_Type_Feature (
-    room_Type_ID INT UNSIGNED NOT NULL,
-    feature_ID INT UNSIGNED NOT NULL,
-    deleted_At DATETIME NULL,
-    PRIMARY KEY (room_Type_ID, feature_ID),
-    CONSTRAINT fk_rtf_room_type FOREIGN KEY (room_Type_ID)
-        REFERENCES Room_Type(room_Type_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_rtf_feature FOREIGN KEY (feature_ID)
-        REFERENCES Feature(feature_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    INDEX idx_rtf_feature (feature_ID)
-) ENGINE=InnoDB;
-
--- ============================================================
--- 4. BOOKINGS AND PRICE SNAPSHOTS
--- ============================================================
-
-CREATE TABLE IF NOT EXISTS Booking (
-    booking_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_ID INT UNSIGNED NOT NULL,
-    booking_Status_ID INT UNSIGNED NOT NULL,
-    checkin_Date DATETIME NOT NULL,
-    checkout_Date DATETIME NOT NULL,
-    booking_Amount DECIMAL(12,2) NOT NULL,
-    required_Downpayment DECIMAL(12,2) NOT NULL,
-    confirmation_Code VARCHAR(60) NULL COMMENT 'Generated once confirmed',
-    hold_Expires_At DATETIME NULL COMMENT 'Optional time limit for Pending Payment holds',
-    created_At DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_At DATETIME NULL,
-    CONSTRAINT uq_booking_confirmation UNIQUE (confirmation_Code),
-    CONSTRAINT fk_booking_guest FOREIGN KEY (user_ID)
-        REFERENCES Users(user_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_booking_status FOREIGN KEY (booking_Status_ID)
-        REFERENCES Booking_Status(booking_Status_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT chk_booking_dates CHECK (checkout_Date > checkin_Date),
-    CONSTRAINT chk_booking_amounts CHECK (
-        booking_Amount >= 0 AND
-        required_Downpayment >= 0 AND
-        required_Downpayment <= booking_Amount
-    ),
-    INDEX idx_booking_guest (user_ID),
-    INDEX idx_booking_status_dates (booking_Status_ID, checkin_Date, checkout_Date),
-    INDEX idx_booking_dates (checkin_Date, checkout_Date),
-    INDEX idx_booking_hold (hold_Expires_At),
-    INDEX idx_booking_deleted (deleted_At)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS Booking_Room (
-    booking_ID INT UNSIGNED NOT NULL,
-    room_ID INT UNSIGNED NOT NULL,
-    num_Guest INT UNSIGNED NOT NULL,
-    nightly_Rate DECIMAL(12,2) NOT NULL,
-    extra_Guest_Fee DECIMAL(12,2) NOT NULL DEFAULT 0.00
-        COMMENT 'Booking-time extra-person rate; policy must define frequency',
-    included_Guests_Snapshot INT UNSIGNED NOT NULL,
-    checked_In_At DATETIME NULL COMMENT 'Actual check-in for this room',
-    checked_Out_At DATETIME NULL COMMENT 'Actual checkout triggers housekeeping',
-    deleted_At DATETIME NULL,
-    PRIMARY KEY (booking_ID, room_ID),
-    CONSTRAINT fk_booking_room_booking FOREIGN KEY (booking_ID)
-        REFERENCES Booking(booking_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_booking_room_room FOREIGN KEY (room_ID)
-        REFERENCES Room(room_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT chk_booking_room_count CHECK (
-        num_Guest > 0 AND included_Guests_Snapshot > 0
-    ),
-    CONSTRAINT chk_booking_room_rates CHECK (
-        nightly_Rate >= 0 AND extra_Guest_Fee >= 0
-    ),
-    CONSTRAINT chk_booking_room_actual_dates CHECK (
-        checked_Out_At IS NULL OR
-        (checked_In_At IS NOT NULL AND checked_Out_At >= checked_In_At)
-    ),
-    INDEX idx_booking_room_room (room_ID, booking_ID)
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS Booking_Addon (
-    booking_ID INT UNSIGNED NOT NULL,
-    addon_ID INT UNSIGNED NOT NULL,
-    quantity INT UNSIGNED NOT NULL DEFAULT 1,
-    unit_Price DECIMAL(12,2) NOT NULL,
-    deleted_At DATETIME NULL,
-    PRIMARY KEY (booking_ID, addon_ID),
-    CONSTRAINT fk_booking_addon_booking FOREIGN KEY (booking_ID)
-        REFERENCES Booking(booking_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_booking_addon_addon FOREIGN KEY (addon_ID)
-        REFERENCES Addon(addon_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT chk_booking_addon_qty CHECK (quantity > 0),
-    CONSTRAINT chk_booking_addon_price CHECK (unit_Price >= 0),
-    INDEX idx_booking_addon_addon (addon_ID)
-) ENGINE=InnoDB;
-
--- ============================================================
--- 5. PAYMENTS AND BOOKING AUDIT LOG
--- ============================================================
-
-CREATE TABLE IF NOT EXISTS Payment (
-    payment_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    booking_ID INT UNSIGNED NOT NULL,
-    payment_Method_ID INT UNSIGNED NOT NULL,
-    processed_By INT UNSIGNED NULL,
-    payment_Status_ID INT UNSIGNED NOT NULL,
-    payment_Type_ID INT UNSIGNED NOT NULL,
-    amount DECIMAL(12,2) NOT NULL,
-    reference_No VARCHAR(120) NULL,
-    payment_Date DATETIME NULL,
-    created_At DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_At DATETIME NULL,
-    CONSTRAINT fk_payment_booking FOREIGN KEY (booking_ID)
-        REFERENCES Booking(booking_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_payment_method FOREIGN KEY (payment_Method_ID)
-        REFERENCES Payment_Method(payment_Method_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_payment_processor FOREIGN KEY (processed_By)
-        REFERENCES Users(user_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_payment_status FOREIGN KEY (payment_Status_ID)
-        REFERENCES Payment_Status(payment_Status_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_payment_type FOREIGN KEY (payment_Type_ID)
-        REFERENCES Payment_Type(payment_Type_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT chk_payment_amount CHECK (amount > 0),
-    CONSTRAINT uq_payment_reference UNIQUE (payment_Method_ID, reference_No),
-    INDEX idx_payment_booking (booking_ID),
-    INDEX idx_payment_status (payment_Status_ID),
-    INDEX idx_payment_processor (processed_By),
-    INDEX idx_payment_type (payment_Type_ID),
-    INDEX idx_payment_deleted (deleted_At)
-) ENGINE=InnoDB;
-
--- Booking_Log should be kept as an audit trail, not edited/deleted in normal use.
--- user_ID may be NULL for a SYSTEM-generated status change.
-CREATE TABLE IF NOT EXISTS Booking_Log (
-    log_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    booking_ID INT UNSIGNED NOT NULL,
-    user_ID INT UNSIGNED NULL,
-    booking_Status_ID INT UNSIGNED NOT NULL,
-    action_Type VARCHAR(60) NOT NULL,
-    action_Date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    remarks VARCHAR(500) NULL,
-    CONSTRAINT fk_blog_booking FOREIGN KEY (booking_ID)
-        REFERENCES Booking(booking_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_blog_actor FOREIGN KEY (user_ID)
-        REFERENCES Users(user_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_blog_status FOREIGN KEY (booking_Status_ID)
-        REFERENCES Booking_Status(booking_Status_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    INDEX idx_blog_booking_date (booking_ID, action_Date),
-    INDEX idx_blog_actor (user_ID)
-) ENGINE=InnoDB;
-
--- ============================================================
--- 6. HOUSEKEEPING
--- ============================================================
-
-CREATE TABLE IF NOT EXISTS Housekeeping_Task (
-    task_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    room_ID INT UNSIGNED NOT NULL,
-    assigned_To INT UNSIGNED NOT NULL,
-    assigned_By INT UNSIGNED NOT NULL,
-    verified_By INT UNSIGNED NULL,
-    housekeeping_Status_ID INT UNSIGNED NOT NULL,
-    assigned_At DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    started_At DATETIME NULL,
-    completed_At DATETIME NULL,
-    verified_At DATETIME NULL,
-    remarks VARCHAR(500) NULL,
-    deleted_At DATETIME NULL,
-    CONSTRAINT fk_hkt_room FOREIGN KEY (room_ID)
-        REFERENCES Room(room_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_hkt_assigned_to FOREIGN KEY (assigned_To)
-        REFERENCES Users(user_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_hkt_assigned_by FOREIGN KEY (assigned_By)
-        REFERENCES Users(user_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_hkt_verified_by FOREIGN KEY (verified_By)
-        REFERENCES Users(user_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT fk_hkt_status FOREIGN KEY (housekeeping_Status_ID)
-        REFERENCES Housekeeping_Status(housekeeping_Status_ID)
-        ON DELETE RESTRICT ON UPDATE RESTRICT,
-    CONSTRAINT chk_hkt_time_started CHECK (
-        started_At IS NULL OR started_At >= assigned_At
-    ),
-    CONSTRAINT chk_hkt_time_completed CHECK (
-        completed_At IS NULL OR
-        (started_At IS NOT NULL AND completed_At >= started_At)
-    ),
-    CONSTRAINT chk_hkt_time_verified CHECK (
-        verified_At IS NULL OR
-        (completed_At IS NOT NULL AND verified_At >= completed_At)
-    ),
-    INDEX idx_hkt_assigned_staff (assigned_To, housekeeping_Status_ID),
-    INDEX idx_hkt_room (room_ID, assigned_At),
-    INDEX idx_hkt_assigned_by (assigned_By),
-    INDEX idx_hkt_verified_by (verified_By),
-    INDEX idx_hkt_deleted (deleted_At)
-) ENGINE=InnoDB;
-
--- ============================================================
--- 7. INITIAL LOOKUP DATA (editable; not tied to fixed IDs)
--- ============================================================
-
-INSERT IGNORE INTO User_Role (role_Name) VALUES
-    ('Admin'), ('Housekeeping'), ('Guest');
-
-INSERT IGNORE INTO Account_Status (account_Status_Name) VALUES
-    ('Active'), ('Suspended'), ('Disabled');
-
-INSERT IGNORE INTO Booking_Status
-    (booking_Status_Name, blocks_Availability, requires_Hold_Expiry_Check) VALUES
-    ('Pending Payment', TRUE, TRUE),
-    ('Pending Approval', TRUE, FALSE),
-    ('Confirmed', TRUE, FALSE),
-    ('Declined', FALSE, FALSE),
-    ('Cancellation Requested', TRUE, FALSE),
-    ('Cancelled', FALSE, FALSE),
-    ('Checked In', TRUE, FALSE),
-    ('Checked Out', FALSE, FALSE),
-    ('Completed', FALSE, FALSE),
-    ('Expired', FALSE, FALSE);
-
-INSERT IGNORE INTO Payment_Status
-    (payment_Status_Name, counts_As_Paid) VALUES
-    ('Pending', FALSE), ('Verified', TRUE),
-    ('Failed', FALSE), ('Cancelled', FALSE);
-
-INSERT IGNORE INTO Payment_Method (payment_Method_Name) VALUES
-    ('Cash'), ('Bank Transfer'), ('GCash');
-
-INSERT IGNORE INTO Payment_Type (payment_Type_Name, balance_Effect) VALUES
-    ('Downpayment', 1), ('Remaining Balance', 1), ('Refund', -1);
-
-INSERT IGNORE INTO Room_Status
-    (room_Status_Name, ready_For_Checkin) VALUES
-    ('Ready', TRUE), ('Needs Cleaning', FALSE),
-    ('Cleaning', FALSE), ('Pending Inspection', FALSE),
-    ('Under Maintenance', FALSE), ('Out of Service', FALSE);
-
-INSERT IGNORE INTO Housekeeping_Status (housekeeping_Status_Name) VALUES
-    ('Assigned'), ('In Progress'), ('Pending Verification'),
-    ('Verified'), ('Needs Recleaning'), ('Cancelled');
-
--- Hotel requirements: check-in at 2 PM, checkout at 12 noon Philippine time;
--- cancellations less than 3 days before check-in are non-refundable.
--- pending_hold_minutes = 30 is a PROPOSED policy, not in the hotel specification;
--- change it after your group agrees on the payment time limit.
--- INSERT IGNORE seeds missing settings but does not overwrite existing settings.
-INSERT IGNORE INTO Hotel_Setting (setting_Key, setting_Value, description) VALUES
-    ('hotel_timezone', 'Asia/Manila', 'Official hotel timezone: Philippine Standard Time (UTC+08:00)'),
-    ('checkin_time', '14:00:00', 'Standard check-in time: 2:00 PM Philippine time'),
-    ('checkout_time', '12:00:00', 'Standard checkout time: 12:00 NN Philippine time'),
-    ('late_cancellation_nonrefundable_days', '3', 'Non-refundable when cancellation is less than 3 days before check-in'),
-    ('pending_hold_minutes', '30', 'Proposed number of minutes to complete the downpayment before a pending hold expires');
-
--- A pending hold does NOT expire on its own just because hold_Expires_At passes.
--- Later, the booking logic must release expired holds and update statuses safely.
-
--- NOT seeded: downpayment_percent. Specification requires a deposit
--- but does not specify the percentage. Enter it only after your group decides.
--- Example after approval:
--- INSERT INTO Hotel_Setting (setting_Key, setting_Value, description)
--- VALUES ('downpayment_percent', '30', 'Required percentage of total booking amount');
 --
--- ALSO NOT seeded: room rates, exact room inventories, and extra fee frequency.
--- Insert those only after confirming the official inventory and business rules.
--- Example:
--- INSERT INTO Room_Type (room_Type, base_Price, included_Guests, max_Guests, extra_Person_Fee)
--- VALUES ('Standard Room', 3500.00, 2, 3, 1000.00);
+-- Table structure for table `account_status`
 --
--- ALTERING AN EXISTING CONFIGURED RATE DOES NOT CHANGE BOOKING_Room price snapshots.
 
--- ============================================================
--- 8. OPTIONAL CHECKS AFTER IMPORT
--- ============================================================
--- SHOW TABLES;
--- SELECT role_ID, role_Name FROM User_Role ORDER BY role_ID;
--- SELECT booking_Status_ID, booking_Status_Name FROM Booking_Status;
--- SELECT setting_Key, setting_Value FROM Hotel_Setting;
+CREATE TABLE `account_status` (
+  `account_Status_ID` int(10) UNSIGNED NOT NULL,
+  `account_Status_Name` varchar(40) NOT NULL,
+  `is_Active` tinyint(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 --
--- SOFT DELETE EXAMPLE (optional future feature; no archive table is created here):
--- UPDATE Users SET deleted_At = NOW() WHERE user_ID = 123 AND deleted_At IS NULL;
--- SELECT * FROM Users WHERE deleted_At IS NULL;  -- active users
--- SELECT * FROM Users WHERE deleted_At IS NOT NULL;  -- archived users
--- UPDATE Users SET deleted_At = NULL WHERE user_ID = 123; -- restore
+-- Dumping data for table `account_status`
 --
--- ROOM AVAILABILITY MUST BE DATE-AWARE, NOT DERIVED FROM Room_Status ALONE:
---   new_checkin < existing_checkout AND new_checkout > existing_checkin
--- Ignore cancelled/declined/expired bookings; pending holds require expiry handling.
--- Protect availability checks and creation with a transaction/locking strategy.
+
+INSERT INTO `account_status` (`account_Status_ID`, `account_Status_Name`, `is_Active`) VALUES
+(1, 'Active', 1),
+(2, 'Suspended', 1),
+(3, 'Disabled', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `addon`
+--
+
+CREATE TABLE `addon` (
+  `addon_ID` int(10) UNSIGNED NOT NULL,
+  `addon_Name` varchar(100) NOT NULL,
+  `addon_Price` decimal(12,2) NOT NULL,
+  `deleted_At` datetime DEFAULT NULL
+) ;
+
+--
+-- Dumping data for table `addon`
+--
+
+INSERT INTO `addon` (`addon_ID`, `addon_Name`, `addon_Price`, `deleted_At`) VALUES
+(1, 'Breakfast', 250.00, NULL),
+(2, 'Extra Pillow', 100.00, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bed_type`
+--
+
+CREATE TABLE `bed_type` (
+  `bed_Type_ID` int(10) UNSIGNED NOT NULL,
+  `bed_Type_Name` varchar(80) NOT NULL,
+  `deleted_At` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `booking`
+--
+
+CREATE TABLE `booking` (
+  `booking_ID` int(10) UNSIGNED NOT NULL,
+  `user_ID` int(10) UNSIGNED NOT NULL,
+  `booking_Status_ID` int(10) UNSIGNED NOT NULL,
+  `checkin_Date` datetime NOT NULL,
+  `checkout_Date` datetime NOT NULL,
+  `booking_Amount` decimal(12,2) NOT NULL,
+  `required_Downpayment` decimal(12,2) NOT NULL,
+  `confirmation_Code` varchar(60) DEFAULT NULL COMMENT 'Generated once confirmed',
+  `hold_Expires_At` datetime DEFAULT NULL COMMENT 'Optional time limit for Pending Payment holds',
+  `created_At` datetime NOT NULL DEFAULT current_timestamp(),
+  `deleted_At` datetime DEFAULT NULL
+) ;
+
+--
+-- Dumping data for table `booking`
+--
+
+INSERT INTO `booking` (`booking_ID`, `user_ID`, `booking_Status_ID`, `checkin_Date`, `checkout_Date`, `booking_Amount`, `required_Downpayment`, `confirmation_Code`, `hold_Expires_At`, `created_At`, `deleted_At`) VALUES
+(1, 1, 2, '2026-11-16 14:00:00', '2026-11-19 12:00:00', 11100.00, 3330.00, NULL, '2026-11-16 18:20:57', '2026-11-16 17:50:57', NULL),
+(2, 2, 1, '2026-11-16 14:00:00', '2026-11-19 12:00:00', 10700.00, 3210.00, NULL, '2026-11-16 18:46:12', '2026-11-16 18:16:12', NULL),
+(3, 3, 1, '2026-11-16 14:00:00', '2026-11-19 12:00:00', 18000.00, 5400.00, NULL, '2026-11-16 21:02:23', '2026-11-16 20:32:23', NULL),
+(4, 4, 1, '2026-11-16 14:00:00', '2026-11-19 12:00:00', 18000.00, 5400.00, NULL, '2026-11-16 22:31:35', '2026-11-16 22:01:35', NULL),
+(5, 5, 2, '2026-11-17 14:00:00', '2026-11-20 12:00:00', 10500.00, 3150.00, NULL, '2026-11-17 16:45:45', '2026-11-17 16:15:45', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `booking_addon`
+--
+
+CREATE TABLE `booking_addon` (
+  `booking_ID` int(10) UNSIGNED NOT NULL,
+  `addon_ID` int(10) UNSIGNED NOT NULL,
+  `quantity` int(10) UNSIGNED NOT NULL DEFAULT 1,
+  `unit_Price` decimal(12,2) NOT NULL,
+  `deleted_At` datetime DEFAULT NULL
+) ;
+
+--
+-- Dumping data for table `booking_addon`
+--
+
+INSERT INTO `booking_addon` (`booking_ID`, `addon_ID`, `quantity`, `unit_Price`, `deleted_At`) VALUES
+(1, 1, 2, 250.00, NULL),
+(1, 2, 1, 100.00, NULL),
+(2, 2, 2, 100.00, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `booking_log`
+--
+
+CREATE TABLE `booking_log` (
+  `log_ID` int(10) UNSIGNED NOT NULL,
+  `booking_ID` int(10) UNSIGNED NOT NULL,
+  `user_ID` int(10) UNSIGNED DEFAULT NULL,
+  `booking_Status_ID` int(10) UNSIGNED NOT NULL,
+  `action_Type` varchar(60) NOT NULL,
+  `action_Date` datetime NOT NULL DEFAULT current_timestamp(),
+  `remarks` varchar(500) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `booking_log`
+--
+
+INSERT INTO `booking_log` (`log_ID`, `booking_ID`, `user_ID`, `booking_Status_ID`, `action_Type`, `action_Date`, `remarks`) VALUES
+(1, 1, 1, 1, 'Created', '2026-11-16 17:50:57', 'Pending downpayment.'),
+(2, 1, 1, 2, 'Downpayment Submitted', '2026-11-16 18:07:30', 'Payment reference submitted; awaiting verification.'),
+(3, 2, 2, 1, 'Created', '2026-11-16 18:16:12', 'Pending downpayment.'),
+(4, 3, 3, 1, 'Created', '2026-11-16 20:32:23', 'Pending downpayment.'),
+(5, 4, 4, 1, 'Created', '2026-11-16 22:01:35', 'Pending downpayment.'),
+(6, 5, 5, 1, 'Created', '2026-11-17 16:15:45', 'Pending downpayment.'),
+(7, 5, 5, 2, 'Downpayment Submitted', '2026-11-17 16:27:58', 'Payment reference submitted; awaiting verification.');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `booking_room`
+--
+
+CREATE TABLE `booking_room` (
+  `booking_ID` int(10) UNSIGNED NOT NULL,
+  `room_ID` int(10) UNSIGNED NOT NULL,
+  `num_Guest` int(10) UNSIGNED NOT NULL,
+  `nightly_Rate` decimal(12,2) NOT NULL,
+  `extra_Guest_Fee` decimal(12,2) NOT NULL DEFAULT 0.00 COMMENT 'Booking-time extra-person rate; policy must define frequency',
+  `included_Guests_Snapshot` int(10) UNSIGNED NOT NULL,
+  `checked_In_At` datetime DEFAULT NULL COMMENT 'Actual check-in for this room',
+  `checked_Out_At` datetime DEFAULT NULL COMMENT 'Actual checkout triggers housekeeping',
+  `deleted_At` datetime DEFAULT NULL
+) ;
+
+--
+-- Dumping data for table `booking_room`
+--
+
+INSERT INTO `booking_room` (`booking_ID`, `room_ID`, `num_Guest`, `nightly_Rate`, `extra_Guest_Fee`, `included_Guests_Snapshot`, `checked_In_At`, `checked_Out_At`, `deleted_At`) VALUES
+(1, 1, 2, 3500.00, 1000.00, 2, NULL, NULL, NULL),
+(2, 2, 2, 3500.00, 1000.00, 2, NULL, NULL, NULL),
+(3, 4, 4, 6000.00, 0.00, 4, NULL, NULL, NULL),
+(4, 4, 4, 6000.00, 0.00, 4, NULL, NULL, NULL),
+(5, 2, 2, 3500.00, 1000.00, 2, NULL, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `booking_status`
+--
+
+CREATE TABLE `booking_status` (
+  `booking_Status_ID` int(10) UNSIGNED NOT NULL,
+  `booking_Status_Name` varchar(50) NOT NULL,
+  `blocks_Availability` tinyint(1) NOT NULL DEFAULT 0,
+  `requires_Hold_Expiry_Check` tinyint(1) NOT NULL DEFAULT 0,
+  `is_Active` tinyint(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `booking_status`
+--
+
+INSERT INTO `booking_status` (`booking_Status_ID`, `booking_Status_Name`, `blocks_Availability`, `requires_Hold_Expiry_Check`, `is_Active`) VALUES
+(1, 'Pending Payment', 1, 1, 1),
+(2, 'Pending Approval', 1, 0, 1),
+(3, 'Confirmed', 1, 0, 1),
+(4, 'Declined', 0, 0, 1),
+(5, 'Cancellation Requested', 1, 0, 1),
+(6, 'Cancelled', 0, 0, 1),
+(7, 'Checked In', 1, 0, 1),
+(8, 'Checked Out', 0, 0, 1),
+(9, 'Completed', 0, 0, 1),
+(10, 'Expired', 0, 0, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `feature`
+--
+
+CREATE TABLE `feature` (
+  `feature_ID` int(10) UNSIGNED NOT NULL,
+  `feature_Name` varchar(100) NOT NULL,
+  `deleted_At` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `floor`
+--
+
+CREATE TABLE `floor` (
+  `floor_ID` int(10) UNSIGNED NOT NULL,
+  `floor_Number` int(11) NOT NULL,
+  `deleted_At` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hotel_setting`
+--
+
+CREATE TABLE `hotel_setting` (
+  `setting_Key` varchar(80) NOT NULL,
+  `setting_Value` varchar(255) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `updated_At` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `hotel_setting`
+--
+
+INSERT INTO `hotel_setting` (`setting_Key`, `setting_Value`, `description`, `updated_At`) VALUES
+('checkin_time', '14:00:00', 'Standard check-in time: 2:00 PM Philippine time', '2026-11-14 22:34:43'),
+('checkout_time', '12:00:00', 'Standard checkout time: 12:00 NN Philippine time', '2026-11-14 22:34:43'),
+('downpayment_percent', '30', 'Required downpayment is 30 percent of total booking amount', '2026-11-16 16:55:04'),
+('hotel_timezone', 'Asia/Manila', 'Official hotel timezone: Philippine Standard Time (UTC+08:00)', '2026-11-14 22:34:43'),
+('late_cancellation_nonrefundable_days', '3', 'Non-refundable when cancellation is less than 3 days before check-in', '2026-11-14 22:34:43'),
+('pending_hold_minutes', '30', 'Proposed number of minutes to complete the downpayment before a pending hold expires', '2026-11-14 22:34:43');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `housekeeping_status`
+--
+
+CREATE TABLE `housekeeping_status` (
+  `housekeeping_Status_ID` int(10) UNSIGNED NOT NULL,
+  `housekeeping_Status_Name` varchar(50) NOT NULL,
+  `is_Active` tinyint(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `housekeeping_status`
+--
+
+INSERT INTO `housekeeping_status` (`housekeeping_Status_ID`, `housekeeping_Status_Name`, `is_Active`) VALUES
+(1, 'Assigned', 1),
+(2, 'In Progress', 1),
+(3, 'Pending Verification', 1),
+(4, 'Verified', 1),
+(5, 'Needs Recleaning', 1),
+(6, 'Cancelled', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `housekeeping_task`
+--
+
+CREATE TABLE `housekeeping_task` (
+  `task_ID` int(10) UNSIGNED NOT NULL,
+  `room_ID` int(10) UNSIGNED NOT NULL,
+  `assigned_To` int(10) UNSIGNED NOT NULL,
+  `assigned_By` int(10) UNSIGNED NOT NULL,
+  `verified_By` int(10) UNSIGNED DEFAULT NULL,
+  `housekeeping_Status_ID` int(10) UNSIGNED NOT NULL,
+  `assigned_At` datetime NOT NULL DEFAULT current_timestamp(),
+  `started_At` datetime DEFAULT NULL,
+  `completed_At` datetime DEFAULT NULL,
+  `verified_At` datetime DEFAULT NULL,
+  `remarks` varchar(500) DEFAULT NULL,
+  `deleted_At` datetime DEFAULT NULL
+) ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment`
+--
+
+CREATE TABLE `payment` (
+  `payment_ID` int(10) UNSIGNED NOT NULL,
+  `booking_ID` int(10) UNSIGNED NOT NULL,
+  `payment_Method_ID` int(10) UNSIGNED NOT NULL,
+  `processed_By` int(10) UNSIGNED DEFAULT NULL,
+  `payment_Status_ID` int(10) UNSIGNED NOT NULL,
+  `payment_Type_ID` int(10) UNSIGNED NOT NULL,
+  `amount` decimal(12,2) NOT NULL,
+  `reference_No` varchar(120) DEFAULT NULL,
+  `payment_Date` datetime DEFAULT NULL,
+  `created_At` datetime NOT NULL DEFAULT current_timestamp(),
+  `deleted_At` datetime DEFAULT NULL
+) ;
+
+--
+-- Dumping data for table `payment`
+--
+
+INSERT INTO `payment` (`payment_ID`, `booking_ID`, `payment_Method_ID`, `processed_By`, `payment_Status_ID`, `payment_Type_ID`, `amount`, `reference_No`, `payment_Date`, `created_At`, `deleted_At`) VALUES
+(1, 1, 3, NULL, 1, 1, 3330.00, 'GCASH20261116001', NULL, '2026-11-16 18:07:30', NULL),
+(2, 5, 2, NULL, 1, 1, 3150.00, 'GCASH20261116001', NULL, '2026-11-17 16:27:58', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_method`
+--
+
+CREATE TABLE `payment_method` (
+  `payment_Method_ID` int(10) UNSIGNED NOT NULL,
+  `payment_Method_Name` varchar(60) NOT NULL,
+  `is_Active` tinyint(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `payment_method`
+--
+
+INSERT INTO `payment_method` (`payment_Method_ID`, `payment_Method_Name`, `is_Active`) VALUES
+(1, 'Cash', 1),
+(2, 'Bank Transfer', 1),
+(3, 'GCash', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_status`
+--
+
+CREATE TABLE `payment_status` (
+  `payment_Status_ID` int(10) UNSIGNED NOT NULL,
+  `payment_Status_Name` varchar(40) NOT NULL,
+  `counts_As_Paid` tinyint(1) NOT NULL DEFAULT 0,
+  `is_Active` tinyint(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `payment_status`
+--
+
+INSERT INTO `payment_status` (`payment_Status_ID`, `payment_Status_Name`, `counts_As_Paid`, `is_Active`) VALUES
+(1, 'Pending', 0, 1),
+(2, 'Verified', 1, 1),
+(3, 'Failed', 0, 1),
+(4, 'Cancelled', 0, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_type`
+--
+
+CREATE TABLE `payment_type` (
+  `payment_Type_ID` int(10) UNSIGNED NOT NULL,
+  `payment_Type_Name` varchar(40) NOT NULL,
+  `balance_Effect` tinyint(4) NOT NULL,
+  `is_Active` tinyint(1) NOT NULL DEFAULT 1
+) ;
+
+--
+-- Dumping data for table `payment_type`
+--
+
+INSERT INTO `payment_type` (`payment_Type_ID`, `payment_Type_Name`, `balance_Effect`, `is_Active`) VALUES
+(1, 'Downpayment', 1, 1),
+(2, 'Remaining Balance', 1, 1),
+(3, 'Refund', -1, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `room`
+--
+
+CREATE TABLE `room` (
+  `room_ID` int(10) UNSIGNED NOT NULL,
+  `room_Type_ID` int(10) UNSIGNED NOT NULL,
+  `floor_ID` int(10) UNSIGNED DEFAULT NULL COMMENT 'Optional for facilities such as Event Hall',
+  `room_Status_ID` int(10) UNSIGNED NOT NULL,
+  `room_Code` varchar(40) NOT NULL,
+  `deleted_At` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `room`
+--
+
+INSERT INTO `room` (`room_ID`, `room_Type_ID`, `floor_ID`, `room_Status_ID`, `room_Code`, `deleted_At`) VALUES
+(1, 1, NULL, 1, 'Room A', NULL),
+(2, 1, NULL, 1, 'Room B', NULL),
+(3, 1, NULL, 1, 'Room C', NULL),
+(4, 2, NULL, 1, 'FR1', NULL),
+(5, 2, NULL, 1, 'FR2', NULL),
+(6, 2, NULL, 1, 'FR3', NULL),
+(7, 3, NULL, 1, 'Event Hall', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `room_status`
+--
+
+CREATE TABLE `room_status` (
+  `room_Status_ID` int(10) UNSIGNED NOT NULL,
+  `room_Status_Name` varchar(50) NOT NULL,
+  `ready_For_Checkin` tinyint(1) NOT NULL DEFAULT 0,
+  `is_Active` tinyint(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `room_status`
+--
+
+INSERT INTO `room_status` (`room_Status_ID`, `room_Status_Name`, `ready_For_Checkin`, `is_Active`) VALUES
+(1, 'Ready', 1, 1),
+(2, 'Needs Cleaning', 0, 1),
+(3, 'Cleaning', 0, 1),
+(4, 'Pending Inspection', 0, 1),
+(5, 'Under Maintenance', 0, 1),
+(6, 'Out of Service', 0, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `room_type`
+--
+
+CREATE TABLE `room_type` (
+  `room_Type_ID` int(10) UNSIGNED NOT NULL,
+  `room_Type` varchar(90) NOT NULL,
+  `base_Price` decimal(12,2) NOT NULL,
+  `included_Guests` int(10) UNSIGNED NOT NULL,
+  `max_Guests` int(10) UNSIGNED NOT NULL,
+  `extra_Person_Fee` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `deleted_At` datetime DEFAULT NULL
+) ;
+
+--
+-- Dumping data for table `room_type`
+--
+
+INSERT INTO `room_type` (`room_Type_ID`, `room_Type`, `base_Price`, `included_Guests`, `max_Guests`, `extra_Person_Fee`, `deleted_At`) VALUES
+(1, 'Standard Room', 3500.00, 2, 3, 1000.00, NULL),
+(2, 'Family Room', 6000.00, 4, 5, 0.00, NULL),
+(3, 'Event Hall', 15000.00, 30, 40, 500.00, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `room_type_bed_type`
+--
+
+CREATE TABLE `room_type_bed_type` (
+  `room_Type_ID` int(10) UNSIGNED NOT NULL,
+  `bed_Type_ID` int(10) UNSIGNED NOT NULL,
+  `num_Beds` int(10) UNSIGNED NOT NULL,
+  `deleted_At` datetime DEFAULT NULL
+) ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `room_type_feature`
+--
+
+CREATE TABLE `room_type_feature` (
+  `room_Type_ID` int(10) UNSIGNED NOT NULL,
+  `feature_ID` int(10) UNSIGNED NOT NULL,
+  `deleted_At` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `user_ID` int(10) UNSIGNED NOT NULL,
+  `role_ID` int(10) UNSIGNED NOT NULL,
+  `account_Status_ID` int(10) UNSIGNED NOT NULL,
+  `first_Name` varchar(80) NOT NULL,
+  `last_Name` varchar(80) NOT NULL,
+  `email_Address` varchar(190) NOT NULL,
+  `phone_Number` varchar(25) DEFAULT NULL,
+  `password_Hash` varchar(255) DEFAULT NULL COMMENT 'NULL for a guest checkout without an account',
+  `created_At` datetime NOT NULL DEFAULT current_timestamp(),
+  `deleted_At` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`user_ID`, `role_ID`, `account_Status_ID`, `first_Name`, `last_Name`, `email_Address`, `phone_Number`, `password_Hash`, `created_At`, `deleted_At`) VALUES
+(1, 3, 1, 'Russel', 'Cabucos', 'rjohncabucos@gmail.com', '09943035821', NULL, '2026-11-16 17:50:57', NULL),
+(2, 3, 1, 'Ashly', 'Galman', 'ashly@gmail.com', '09758531894', NULL, '2026-11-16 18:16:12', NULL),
+(3, 3, 1, 'Russel', 'Cabucos', 'russ@gmail.com', '09943035821', NULL, '2026-11-16 20:32:23', NULL),
+(4, 3, 1, 'Russel', 'Cabucos', 'rj@gmail.com', '09943035821', NULL, '2026-11-16 22:01:35', NULL),
+(5, 3, 1, 'matthew', 'aquino', 'matt@gmail.com', '09943035821', NULL, '2026-11-17 16:15:45', NULL),
+(6, 3, 1, 'Mary', 'Hammed', 'mary@gmail.com', '09943035821', '$2y$10$Nv8ZtqlsFqcmCYZ/hfkOU.fozzxiASzJH2YYpnzH7F9uuwpknDyRO', '2026-11-17 21:12:44', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_role`
+--
+
+CREATE TABLE `user_role` (
+  `role_ID` int(10) UNSIGNED NOT NULL,
+  `role_Name` varchar(40) NOT NULL,
+  `is_Active` tinyint(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `user_role`
+--
+
+INSERT INTO `user_role` (`role_ID`, `role_Name`, `is_Active`) VALUES
+(1, 'Admin', 1),
+(2, 'Housekeeping', 1),
+(3, 'Guest', 1);
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `account_status`
+--
+ALTER TABLE `account_status`
+  ADD PRIMARY KEY (`account_Status_ID`),
+  ADD UNIQUE KEY `uq_account_status_name` (`account_Status_Name`);
+
+--
+-- Indexes for table `addon`
+--
+ALTER TABLE `addon`
+  ADD PRIMARY KEY (`addon_ID`),
+  ADD UNIQUE KEY `uq_addon_name` (`addon_Name`);
+
+--
+-- Indexes for table `bed_type`
+--
+ALTER TABLE `bed_type`
+  ADD PRIMARY KEY (`bed_Type_ID`),
+  ADD UNIQUE KEY `uq_bed_type_name` (`bed_Type_Name`);
+
+--
+-- Indexes for table `booking`
+--
+ALTER TABLE `booking`
+  ADD PRIMARY KEY (`booking_ID`),
+  ADD UNIQUE KEY `uq_booking_confirmation` (`confirmation_Code`),
+  ADD KEY `idx_booking_guest` (`user_ID`),
+  ADD KEY `idx_booking_status_dates` (`booking_Status_ID`,`checkin_Date`,`checkout_Date`),
+  ADD KEY `idx_booking_dates` (`checkin_Date`,`checkout_Date`),
+  ADD KEY `idx_booking_hold` (`hold_Expires_At`),
+  ADD KEY `idx_booking_deleted` (`deleted_At`);
+
+--
+-- Indexes for table `booking_addon`
+--
+ALTER TABLE `booking_addon`
+  ADD PRIMARY KEY (`booking_ID`,`addon_ID`),
+  ADD KEY `idx_booking_addon_addon` (`addon_ID`);
+
+--
+-- Indexes for table `booking_log`
+--
+ALTER TABLE `booking_log`
+  ADD PRIMARY KEY (`log_ID`),
+  ADD KEY `fk_blog_status` (`booking_Status_ID`),
+  ADD KEY `idx_blog_booking_date` (`booking_ID`,`action_Date`),
+  ADD KEY `idx_blog_actor` (`user_ID`);
+
+--
+-- Indexes for table `booking_room`
+--
+ALTER TABLE `booking_room`
+  ADD PRIMARY KEY (`booking_ID`,`room_ID`),
+  ADD KEY `idx_booking_room_room` (`room_ID`,`booking_ID`);
+
+--
+-- Indexes for table `booking_status`
+--
+ALTER TABLE `booking_status`
+  ADD PRIMARY KEY (`booking_Status_ID`),
+  ADD UNIQUE KEY `uq_booking_status_name` (`booking_Status_Name`);
+
+--
+-- Indexes for table `feature`
+--
+ALTER TABLE `feature`
+  ADD PRIMARY KEY (`feature_ID`),
+  ADD UNIQUE KEY `uq_feature_name` (`feature_Name`);
+
+--
+-- Indexes for table `floor`
+--
+ALTER TABLE `floor`
+  ADD PRIMARY KEY (`floor_ID`),
+  ADD UNIQUE KEY `uq_floor_number` (`floor_Number`);
+
+--
+-- Indexes for table `hotel_setting`
+--
+ALTER TABLE `hotel_setting`
+  ADD PRIMARY KEY (`setting_Key`);
+
+--
+-- Indexes for table `housekeeping_status`
+--
+ALTER TABLE `housekeeping_status`
+  ADD PRIMARY KEY (`housekeeping_Status_ID`),
+  ADD UNIQUE KEY `uq_housekeeping_status_name` (`housekeeping_Status_Name`);
+
+--
+-- Indexes for table `housekeeping_task`
+--
+ALTER TABLE `housekeeping_task`
+  ADD PRIMARY KEY (`task_ID`),
+  ADD KEY `fk_hkt_status` (`housekeeping_Status_ID`),
+  ADD KEY `idx_hkt_assigned_staff` (`assigned_To`,`housekeeping_Status_ID`),
+  ADD KEY `idx_hkt_room` (`room_ID`,`assigned_At`),
+  ADD KEY `idx_hkt_assigned_by` (`assigned_By`),
+  ADD KEY `idx_hkt_verified_by` (`verified_By`),
+  ADD KEY `idx_hkt_deleted` (`deleted_At`);
+
+--
+-- Indexes for table `payment`
+--
+ALTER TABLE `payment`
+  ADD PRIMARY KEY (`payment_ID`),
+  ADD UNIQUE KEY `uq_payment_reference` (`payment_Method_ID`,`reference_No`),
+  ADD KEY `idx_payment_booking` (`booking_ID`),
+  ADD KEY `idx_payment_status` (`payment_Status_ID`),
+  ADD KEY `idx_payment_processor` (`processed_By`),
+  ADD KEY `idx_payment_type` (`payment_Type_ID`),
+  ADD KEY `idx_payment_deleted` (`deleted_At`);
+
+--
+-- Indexes for table `payment_method`
+--
+ALTER TABLE `payment_method`
+  ADD PRIMARY KEY (`payment_Method_ID`),
+  ADD UNIQUE KEY `uq_payment_method_name` (`payment_Method_Name`);
+
+--
+-- Indexes for table `payment_status`
+--
+ALTER TABLE `payment_status`
+  ADD PRIMARY KEY (`payment_Status_ID`),
+  ADD UNIQUE KEY `uq_payment_status_name` (`payment_Status_Name`);
+
+--
+-- Indexes for table `payment_type`
+--
+ALTER TABLE `payment_type`
+  ADD PRIMARY KEY (`payment_Type_ID`),
+  ADD UNIQUE KEY `uq_payment_type_name` (`payment_Type_Name`);
+
+--
+-- Indexes for table `room`
+--
+ALTER TABLE `room`
+  ADD PRIMARY KEY (`room_ID`),
+  ADD UNIQUE KEY `uq_room_code` (`room_Code`),
+  ADD KEY `fk_room_floor` (`floor_ID`),
+  ADD KEY `idx_room_type` (`room_Type_ID`),
+  ADD KEY `idx_room_status` (`room_Status_ID`),
+  ADD KEY `idx_room_deleted` (`deleted_At`);
+
+--
+-- Indexes for table `room_status`
+--
+ALTER TABLE `room_status`
+  ADD PRIMARY KEY (`room_Status_ID`),
+  ADD UNIQUE KEY `uq_room_status_name` (`room_Status_Name`);
+
+--
+-- Indexes for table `room_type`
+--
+ALTER TABLE `room_type`
+  ADD PRIMARY KEY (`room_Type_ID`),
+  ADD UNIQUE KEY `uq_room_type_name` (`room_Type`);
+
+--
+-- Indexes for table `room_type_bed_type`
+--
+ALTER TABLE `room_type_bed_type`
+  ADD PRIMARY KEY (`room_Type_ID`,`bed_Type_ID`),
+  ADD KEY `idx_rtb_bed_type` (`bed_Type_ID`);
+
+--
+-- Indexes for table `room_type_feature`
+--
+ALTER TABLE `room_type_feature`
+  ADD PRIMARY KEY (`room_Type_ID`,`feature_ID`),
+  ADD KEY `idx_rtf_feature` (`feature_ID`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`user_ID`),
+  ADD UNIQUE KEY `uq_users_email` (`email_Address`),
+  ADD KEY `fk_users_account_status` (`account_Status_ID`),
+  ADD KEY `idx_users_role` (`role_ID`),
+  ADD KEY `idx_users_deleted` (`deleted_At`);
+
+--
+-- Indexes for table `user_role`
+--
+ALTER TABLE `user_role`
+  ADD PRIMARY KEY (`role_ID`),
+  ADD UNIQUE KEY `uq_user_role_name` (`role_Name`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `account_status`
+--
+ALTER TABLE `account_status`
+  MODIFY `account_Status_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `addon`
+--
+ALTER TABLE `addon`
+  MODIFY `addon_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bed_type`
+--
+ALTER TABLE `bed_type`
+  MODIFY `bed_Type_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `booking`
+--
+ALTER TABLE `booking`
+  MODIFY `booking_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `booking_log`
+--
+ALTER TABLE `booking_log`
+  MODIFY `log_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `booking_status`
+--
+ALTER TABLE `booking_status`
+  MODIFY `booking_Status_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `feature`
+--
+ALTER TABLE `feature`
+  MODIFY `feature_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `floor`
+--
+ALTER TABLE `floor`
+  MODIFY `floor_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `housekeeping_status`
+--
+ALTER TABLE `housekeeping_status`
+  MODIFY `housekeeping_Status_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `housekeeping_task`
+--
+ALTER TABLE `housekeeping_task`
+  MODIFY `task_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payment`
+--
+ALTER TABLE `payment`
+  MODIFY `payment_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payment_method`
+--
+ALTER TABLE `payment_method`
+  MODIFY `payment_Method_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `payment_status`
+--
+ALTER TABLE `payment_status`
+  MODIFY `payment_Status_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `payment_type`
+--
+ALTER TABLE `payment_type`
+  MODIFY `payment_Type_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `room`
+--
+ALTER TABLE `room`
+  MODIFY `room_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `room_status`
+--
+ALTER TABLE `room_status`
+  MODIFY `room_Status_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `room_type`
+--
+ALTER TABLE `room_type`
+  MODIFY `room_Type_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `user_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `user_role`
+--
+ALTER TABLE `user_role`
+  MODIFY `role_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `booking`
+--
+ALTER TABLE `booking`
+  ADD CONSTRAINT `fk_booking_guest` FOREIGN KEY (`user_ID`) REFERENCES `users` (`user_ID`),
+  ADD CONSTRAINT `fk_booking_status` FOREIGN KEY (`booking_Status_ID`) REFERENCES `booking_status` (`booking_Status_ID`);
+
+--
+-- Constraints for table `booking_addon`
+--
+ALTER TABLE `booking_addon`
+  ADD CONSTRAINT `fk_booking_addon_addon` FOREIGN KEY (`addon_ID`) REFERENCES `addon` (`addon_ID`),
+  ADD CONSTRAINT `fk_booking_addon_booking` FOREIGN KEY (`booking_ID`) REFERENCES `booking` (`booking_ID`);
+
+--
+-- Constraints for table `booking_log`
+--
+ALTER TABLE `booking_log`
+  ADD CONSTRAINT `fk_blog_actor` FOREIGN KEY (`user_ID`) REFERENCES `users` (`user_ID`),
+  ADD CONSTRAINT `fk_blog_booking` FOREIGN KEY (`booking_ID`) REFERENCES `booking` (`booking_ID`),
+  ADD CONSTRAINT `fk_blog_status` FOREIGN KEY (`booking_Status_ID`) REFERENCES `booking_status` (`booking_Status_ID`);
+
+--
+-- Constraints for table `booking_room`
+--
+ALTER TABLE `booking_room`
+  ADD CONSTRAINT `fk_booking_room_booking` FOREIGN KEY (`booking_ID`) REFERENCES `booking` (`booking_ID`),
+  ADD CONSTRAINT `fk_booking_room_room` FOREIGN KEY (`room_ID`) REFERENCES `room` (`room_ID`);
+
+--
+-- Constraints for table `housekeeping_task`
+--
+ALTER TABLE `housekeeping_task`
+  ADD CONSTRAINT `fk_hkt_assigned_by` FOREIGN KEY (`assigned_By`) REFERENCES `users` (`user_ID`),
+  ADD CONSTRAINT `fk_hkt_assigned_to` FOREIGN KEY (`assigned_To`) REFERENCES `users` (`user_ID`),
+  ADD CONSTRAINT `fk_hkt_room` FOREIGN KEY (`room_ID`) REFERENCES `room` (`room_ID`),
+  ADD CONSTRAINT `fk_hkt_status` FOREIGN KEY (`housekeeping_Status_ID`) REFERENCES `housekeeping_status` (`housekeeping_Status_ID`),
+  ADD CONSTRAINT `fk_hkt_verified_by` FOREIGN KEY (`verified_By`) REFERENCES `users` (`user_ID`);
+
+--
+-- Constraints for table `payment`
+--
+ALTER TABLE `payment`
+  ADD CONSTRAINT `fk_payment_booking` FOREIGN KEY (`booking_ID`) REFERENCES `booking` (`booking_ID`),
+  ADD CONSTRAINT `fk_payment_method` FOREIGN KEY (`payment_Method_ID`) REFERENCES `payment_method` (`payment_Method_ID`),
+  ADD CONSTRAINT `fk_payment_processor` FOREIGN KEY (`processed_By`) REFERENCES `users` (`user_ID`),
+  ADD CONSTRAINT `fk_payment_status` FOREIGN KEY (`payment_Status_ID`) REFERENCES `payment_status` (`payment_Status_ID`),
+  ADD CONSTRAINT `fk_payment_type` FOREIGN KEY (`payment_Type_ID`) REFERENCES `payment_type` (`payment_Type_ID`);
+
+--
+-- Constraints for table `room`
+--
+ALTER TABLE `room`
+  ADD CONSTRAINT `fk_room_floor` FOREIGN KEY (`floor_ID`) REFERENCES `floor` (`floor_ID`),
+  ADD CONSTRAINT `fk_room_status` FOREIGN KEY (`room_Status_ID`) REFERENCES `room_status` (`room_Status_ID`),
+  ADD CONSTRAINT `fk_room_type` FOREIGN KEY (`room_Type_ID`) REFERENCES `room_type` (`room_Type_ID`);
+
+--
+-- Constraints for table `room_type_bed_type`
+--
+ALTER TABLE `room_type_bed_type`
+  ADD CONSTRAINT `fk_rtb_bed_type` FOREIGN KEY (`bed_Type_ID`) REFERENCES `bed_type` (`bed_Type_ID`),
+  ADD CONSTRAINT `fk_rtb_room_type` FOREIGN KEY (`room_Type_ID`) REFERENCES `room_type` (`room_Type_ID`);
+
+--
+-- Constraints for table `room_type_feature`
+--
+ALTER TABLE `room_type_feature`
+  ADD CONSTRAINT `fk_rtf_feature` FOREIGN KEY (`feature_ID`) REFERENCES `feature` (`feature_ID`),
+  ADD CONSTRAINT `fk_rtf_room_type` FOREIGN KEY (`room_Type_ID`) REFERENCES `room_type` (`room_Type_ID`);
+
+--
+-- Constraints for table `users`
+--
+ALTER TABLE `users`
+  ADD CONSTRAINT `fk_users_account_status` FOREIGN KEY (`account_Status_ID`) REFERENCES `account_status` (`account_Status_ID`),
+  ADD CONSTRAINT `fk_users_role` FOREIGN KEY (`role_ID`) REFERENCES `user_role` (`role_ID`);
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

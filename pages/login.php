@@ -1,7 +1,6 @@
-
 <?php
 
-require_once __DIR__ . '/auth_session.php';
+require_once __DIR__ . '/../includes/auth_session.php';
 
 $authError = '';
 $authSuccess = $_SESSION['auth_success'] ?? '';
@@ -39,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
 
-            require_once __DIR__ . '/database.php';
+            require_once __DIR__ . '/../includes/database.php';
 
             // Retrieve the user, role, and account status
             $stmt = $pdo->prepare("
@@ -156,9 +155,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <title>Sign In | Bella Vista Hotel</title>
 
-    <link rel="stylesheet" href="global_style.css">
-    <link rel="stylesheet" href="login.css?v=5">
-    <link rel="stylesheet" href="responsive_landing.css?v=19">
+    <link rel="stylesheet" href="../assets/css/global_style.css">
+    <link rel="stylesheet" href="../assets/css/login.css?v=5">
+    <link rel="stylesheet" href="../assets/css/responsive_landing.css?v=19">
 
 </head>
 
@@ -204,7 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <header class="auth-header">
 
-                <a href="index.php" class="auth-back-link">
+                <a href="../index.php" class="auth-back-link">
                     &#8592; Back to Home
                 </a>
 
@@ -217,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="auth-brand">
 
                     <img
-                        src="images/logo-removebg.png"
+                        src="../assets/images/logo-removebg.png"
                         alt="Bella Vista Hotel Logo"
                         class="auth-logo"
                     >
@@ -399,7 +398,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     </dialog>
 
-    <script src="login.js?v=2" defer></script>
+    <script src="../assets/js/login.js?v=2" defer></script>
 
 </body>
 </html>

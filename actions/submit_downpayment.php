@@ -1,9 +1,8 @@
-
 <?php
 
 session_start();
 
-require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/../includes/database.php';
 
 // ========================================
 // 1. ALLOW POST REQUESTS ONLY
@@ -69,7 +68,7 @@ if (
         'Please select a valid payment method and ' .
         'enter a valid transaction reference.';
 
-    header('Location: booking_created.php', true, 303);
+    header('Location: ../pages/booking_created.php', true, 303);
     exit;
 }
 
@@ -333,7 +332,7 @@ try {
         'Payment details submitted successfully. ' .
         'Your reservation is awaiting admin verification.';
 
-    header('Location: booking_created.php', true, 303);
+    header('Location: ../pages/booking_created.php', true, 303);
     exit;
 
 } catch (Throwable $e) {
@@ -356,6 +355,6 @@ try {
             : 'Unable to save payment details. ' .
               'Please check your reference and try again.';
 
-    header('Location: booking_created.php', true, 303);
+    header('Location: ../pages/booking_created.php', true, 303);
     exit;
 }

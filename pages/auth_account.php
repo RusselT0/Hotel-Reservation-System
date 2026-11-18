@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/auth_session.php';
+require_once __DIR__ . '/../includes/auth_session.php';
 
 // Prevent unauthenticated access
 if (empty($_SESSION['auth_user'])) {
@@ -37,7 +37,7 @@ $user = $_SESSION['auth_user'];
 
     <title>Account | Bella Vista Hotel</title>
 
-    <link rel="stylesheet" href="global_style.css">
+    <link rel="stylesheet" href="../assets/css/global_style.css">
 
 </head>
 

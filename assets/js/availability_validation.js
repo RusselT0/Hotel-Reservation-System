@@ -66,10 +66,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
 
-            const response = await fetch("check_availability.php", {
-                method: "POST",
-                body: formData
-            });
+            const response = await fetch(
+                new URL("../actions/check_availability.php", form.action),
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
 
             const data = await response.json();
 
@@ -108,9 +111,11 @@ document.addEventListener("DOMContentLoaded", () => {
             searchParams.set("facility", facility);
             searchParams.set("guests", guests);
 
-            window.location.href =
-                "availability.php?" + searchParams.toString();
+            const redirectURL = new URL(form.action);
 
+            redirectURL.search = searchParams.toString();
+
+            window.location.href = redirectURL.href;
 
         } catch (error) {
 

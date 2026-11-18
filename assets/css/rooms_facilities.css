@@ -314,3 +314,73 @@
     font-size: 12px;
     color: #777;
 }
+
+/* DYNAMIC ROOM DETAILS */
+
+.room-modal {
+    width: min(600px, calc(100vw - 32px));
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.room-modal [hidden] {
+    display: none !important;
+}
+
+.room-modal-section {
+    margin: 22px 0;
+    padding-top: 20px;
+    border-top: 1px solid #d7dbd0;
+}
+
+.room-modal-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #34402b;
+    margin-bottom: 15px;
+}
+
+#roomModalBeds,
+#roomModalFeatures {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+#roomModalBeds li,
+#roomModalFeatures li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+
+    font-size: 13px;
+    line-height: 1.5;
+    color: #535c4e;
+}
+
+#roomModalBeds li::before,
+#roomModalFeatures li::before {
+    content: "\2713";
+    color: #a78c51;
+    font-weight: 700;
+}
+
+#roomModalPrice {
+    font-size: 24px;
+    font-weight: 700;
+    color: #a78c51;
+}
+
+#roomModalFee {
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.room-book-btn {
+    cursor: pointer;
+}

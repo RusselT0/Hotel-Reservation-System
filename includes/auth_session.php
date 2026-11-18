@@ -35,5 +35,3 @@ function authEscape($value): string {
         'UTF-8'
     );
 }
-
-?>

@@ -1,8 +1,7 @@
-
 <?php
 
 session_start();
-require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/../includes/database.php';
 
 // ========================================
 // 1. ACCEPT POST REQUESTS ONLY
@@ -645,7 +644,7 @@ try {
         'hold_until' => $holdUntil
     ];
 
-    header('Location: booking_created.php', true, 303);
+    header('Location: ../pages/booking_created.php', true, 303);
     exit;
 
 } catch (Throwable $e) {
@@ -669,7 +668,7 @@ try {
     $_SESSION['booking_save_error'] = $message;
 
     header(
-        'Location: booking.php?' .
+        'Location: ../pages/booking.php?' .
         http_build_query([
             'room_id' => $review['room_id'],
             'checkin' => $review['checkin'],
@@ -679,6 +678,5 @@ try {
         true,
         303
     );
-
     exit;
 }

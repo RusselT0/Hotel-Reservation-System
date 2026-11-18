@@ -21,9 +21,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Existing images from your project
     const roomImages = {
-        "Standard Room": "images/standard room.jfif",
-        "Family Room": "images/family room.webp",
-        "Event Hall": "images/event hall.jfif"
+        "Standard Room": "../assets/images/standard room.jfif",
+        "Family Room": "../assets/images/family room.webp",
+        "Event Hall": "../assets/images/event hall.jfif"
     };
 
     // Format prices into Philippine pesos
@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // ROOM IMAGE
         const image = document.createElement("img");
         image.className = "avp-room-image";
-        image.src = roomImages[data.room_type] || "images/hero.webp";
+        image.src = roomImages[data.room_type] || "../assets/images/hero.webp";
         image.alt = `${data.room_type} - ${room.room_Code}`;
         image.loading = "lazy";
 
@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
 
         // Send search values to the existing PHP backend
-        const response = await fetch("check_availability.php", {
+        const response = await fetch("../actions/check_availability.php", {
             method: "POST",
             body: formData
         });

@@ -1,6 +1,5 @@
-
 <?php
-require_once 'database.php';
+require_once __DIR__ . '/../includes/database.php';
 
 // Retrieve room types from database
 $stmt = $pdo->query("
@@ -33,11 +32,11 @@ $guests = searchValue('guests');
           content="width=device-width, initial-scale=1.0">
 
     <title>Room Availability | Bella Vista Hotel</title>
-    <link rel="stylesheet" href="global_style.css">
-    <link rel="stylesheet" href="landing.css">
-    <link rel="stylesheet" href="availability_form.css?v=2">
-    <link rel="stylesheet" href="availability_page.css?v=2">
-    <link rel="stylesheet" href="responsive_landing.css?v=3">
+    <link rel="stylesheet" href="../assets/css/global_style.css">
+    <link rel="stylesheet" href="../assets/css/landing.css">
+    <link rel="stylesheet" href="../assets/css/availability_form.css?v=2">
+    <link rel="stylesheet" href="../assets/css/availability_page.css?v=2">
+    <link rel="stylesheet" href="../assets/css/responsive_landing.css?v=3">
 </head>
 
 
@@ -49,10 +48,10 @@ $guests = searchValue('guests');
     <!-- REUSED NAVBAR -->
     <nav class="navbar avp-navbar">
 
-        <a href="index.php#home" class="logo">
-            <img src="images/logo-removebg.png"
-                 alt="Bella Vista Hotel Logo"
-                 class="hotel-logo">
+        <a href="../index.php#home" class="logo">
+            <img src="../assets/images/logo-removebg.png"
+                alt="Bella Vista Hotel Logo"
+                class="hotel-logo">
 
             <span class="logo-text">
                 Bella Vista Hotel
@@ -61,9 +60,9 @@ $guests = searchValue('guests');
         </a>
 
         <div class="nav-links">
-            <a href="index.php#about">About Us</a>
-            <a href="index.php#gallery">Gallery</a>
-            <a href="index.php#rooms">Rooms & Facilities</a>
+            <a href="../index.php#about">About Us</a>
+            <a href="../index.php#gallery">Gallery</a>
+            <a href="../index.php#rooms">Rooms & Facilities</a>
             <a href="login.php">Sign In / Register</a>
         </div>
 
@@ -139,7 +138,7 @@ $guests = searchValue('guests');
 
     <!-- BREADCRUMB -->
     <div class="avp-breadcrumb">
-        <a href="index.php">Home</a>
+        <a href="../index.php">Home</a>
         <span>/</span>
         <span>Availability Results</span>
     </div>
@@ -218,9 +217,9 @@ $guests = searchValue('guests');
     </div>
 </dialog>
 
-<script src="navbar.js" defer></script>
-<script src="availability_validation.js" defer></script>
-<script src="availability_results.js?v=1" defer></script>
+<script src="../assets/js/navbar.js" defer></script>
+<script src="../assets/js/availability_validation.js" defer></script>
+<script src="../assets/js/availability_results.js?v=1" defer></script>
 
 <!-- We will connect the results rendering in Step 7.3 -->
 

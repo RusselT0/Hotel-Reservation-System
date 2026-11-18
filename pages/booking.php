@@ -6,7 +6,7 @@ session_start();
 $bookingSaveError = $_SESSION['booking_save_error'] ?? null;
 unset($_SESSION['booking_save_error']);
 
-require_once 'database.php';
+require_once __DIR__ . '/../includes/database.php';
 
 // Receive booking information from URL
 $roomID = filter_input(
@@ -495,20 +495,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
 
     <title>Book a Room | Bella Vista Hotel</title>
 
-    <link rel="stylesheet" href="global_style.css">
-    <link rel="stylesheet" href="landing.css?v=3">
-    <link rel="stylesheet" href="booking.css?v=6">
-    <link rel="stylesheet" href="responsive_landing.css?v=3">
+    <link rel="stylesheet" href="../assets/css/global_style.css">
+    <link rel="stylesheet" href="../assets/css/landing.css?v=3">
+    <link rel="stylesheet" href="../assets/css/booking.css?v=6">
+    <link rel="stylesheet" href="../assets/css/responsive_landing.css?v=3">
 </head>
 
 <body>
 <header class="booking-header">
 <!-- NAVIGATION -->
             <nav class="navbar">
-                    
-                <a href="index.php" class="logo">
+
+                <a href="../index.php" class="logo">
                     <img
-                        src="images/logo-removebg.png"
+                        src="../assets/images/logo-removebg.png"
                         alt="Bella Vista Hotel & Events Place Logo"
                         class="hotel-logo"
                     >
@@ -520,14 +520,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                 </a>
 
                 <div class="nav-links">
-                    <a href="index.php#about">About Us</a>
-                    <a href="index.php#gallery">Gallery</a>
-                    <a href="index.php#rooms">Rooms & Facilities</a>
+                    <a href="../index.php#about">About Us</a>
+                    <a href="../index.php#gallery">Gallery</a>
+                    <a href="../index.php#rooms">Rooms & Facilities</a>
                     <a href="login.php">Sign In / Register</a>
                 </div>
 
             </nav>
 </header>
+
 <!-- ==========================================
      BOOKING PAGE MAIN CONTENT
 ========================================== -->
@@ -565,7 +566,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                     <?= escapeHTML($error) ?>
                 </p>
 
-                <a href="index.php" class="bk-back-link">
+                <a href="../index.php" class="bk-back-link">
                     Return to Home
                 </a>
 
@@ -580,13 +581,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
             // ======================================
 
             $roomImages = [
-                'Standard Room' => 'images/standard room.jfif',
-                'Family Room' => 'images/family room.webp',
-                'Event Hall' => 'images/event hall.jfif'
+                'Standard Room' => '../assets/images/standard room.jfif',
+                'Family Room' => '../assets/images/family room.webp',
+                'Event Hall' => '../assets/images/event hall.jfif'
             ];
 
             $roomImage = $roomImages[$room['room_Type']]
-                ?? 'images/hero.webp';
+                ?? '../assets/images/hero.webp';
 
             // ======================================
             // INITIAL PRICE PREVIEW
@@ -763,7 +764,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
 
                                 <form
                                     method="POST"
-                                    action="save_pending_booking.php"
+                                    action="../actions/save_pending_booking.php"
                                 >
 
                                     <input
@@ -1404,7 +1405,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
 
         </dialog>
 
-        <script src="booking_modal.js?v=1" defer></script>
-        <script src="navbar.js" defer></script>
+        <script src="../assets/js/booking_modal.js?v=1" defer></script>
+        <script src="../assets/js/navbar.js" defer></script>
 </body>
 </html>
