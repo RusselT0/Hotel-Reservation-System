@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 18, 2026 at 12:37 PM
+-- Generation Time: Nov 19, 2026 at 03:41 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -61,7 +61,13 @@ CREATE TABLE `addon` (
 
 INSERT INTO `addon` (`addon_ID`, `addon_Name`, `addon_Price`, `deleted_At`) VALUES
 (1, 'Breakfast', 250.00, NULL),
-(2, 'Extra Pillow', 100.00, NULL);
+(2, 'Extra Pillow', 100.00, NULL),
+(3, 'Extra Blanket', 150.00, NULL),
+(4, 'Extra Towel', 100.00, NULL),
+(5, 'Extra Mattress', 500.00, NULL),
+(6, 'Room Decoration', 1000.00, NULL),
+(7, 'Event Decoration', 2500.00, NULL),
+(8, 'Additional Projector Rental', 1500.00, NULL);
 
 -- --------------------------------------------------------
 
@@ -74,6 +80,18 @@ CREATE TABLE `bed_type` (
   `bed_Type_Name` varchar(80) NOT NULL,
   `deleted_At` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `bed_type`
+--
+
+INSERT INTO `bed_type` (`bed_Type_ID`, `bed_Type_Name`, `deleted_At`) VALUES
+(1, 'Single Bed', NULL),
+(2, 'Double Bed', NULL),
+(3, 'Queen Bed', NULL),
+(4, 'King Bed', NULL),
+(5, 'Bunk Bed', NULL),
+(6, 'Extra Bed', NULL);
 
 -- --------------------------------------------------------
 
@@ -104,7 +122,8 @@ INSERT INTO `booking` (`booking_ID`, `user_ID`, `booking_Status_ID`, `checkin_Da
 (2, 2, 1, '2026-11-16 14:00:00', '2026-11-19 12:00:00', 10700.00, 3210.00, NULL, '2026-11-16 18:46:12', '2026-11-16 18:16:12', NULL),
 (3, 3, 1, '2026-11-16 14:00:00', '2026-11-19 12:00:00', 18000.00, 5400.00, NULL, '2026-11-16 21:02:23', '2026-11-16 20:32:23', NULL),
 (4, 4, 1, '2026-11-16 14:00:00', '2026-11-19 12:00:00', 18000.00, 5400.00, NULL, '2026-11-16 22:31:35', '2026-11-16 22:01:35', NULL),
-(5, 5, 2, '2026-11-17 14:00:00', '2026-11-20 12:00:00', 10500.00, 3150.00, NULL, '2026-11-17 16:45:45', '2026-11-17 16:15:45', NULL);
+(5, 5, 2, '2026-11-17 14:00:00', '2026-11-20 12:00:00', 10500.00, 3150.00, NULL, '2026-11-17 16:45:45', '2026-11-17 16:15:45', NULL),
+(6, 9, 4, '2026-11-18 14:00:00', '2026-11-19 12:00:00', 6400.00, 1920.00, NULL, NULL, '2026-11-18 23:28:48', NULL);
 
 -- --------------------------------------------------------
 
@@ -127,7 +146,9 @@ CREATE TABLE `booking_addon` (
 INSERT INTO `booking_addon` (`booking_ID`, `addon_ID`, `quantity`, `unit_Price`, `deleted_At`) VALUES
 (1, 1, 2, 250.00, NULL),
 (1, 2, 1, 100.00, NULL),
-(2, 2, 2, 100.00, NULL);
+(2, 2, 2, 100.00, NULL),
+(6, 1, 1, 250.00, NULL),
+(6, 3, 1, 150.00, NULL);
 
 -- --------------------------------------------------------
 
@@ -156,7 +177,10 @@ INSERT INTO `booking_log` (`log_ID`, `booking_ID`, `user_ID`, `booking_Status_ID
 (4, 3, 3, 1, 'Created', '2026-11-16 20:32:23', 'Pending downpayment.'),
 (5, 4, 4, 1, 'Created', '2026-11-16 22:01:35', 'Pending downpayment.'),
 (6, 5, 5, 1, 'Created', '2026-11-17 16:15:45', 'Pending downpayment.'),
-(7, 5, 5, 2, 'Downpayment Submitted', '2026-11-17 16:27:58', 'Payment reference submitted; awaiting verification.');
+(7, 5, 5, 2, 'Downpayment Submitted', '2026-11-17 16:27:58', 'Payment reference submitted; awaiting verification.'),
+(8, 6, 9, 1, 'Created', '2026-11-18 23:28:48', 'Pending downpayment.'),
+(9, 6, 9, 2, 'Downpayment Submitted', '2026-11-18 23:29:35', 'Payment reference submitted; awaiting verification.'),
+(10, 6, 7, 4, 'Declined', '2026-11-19 22:26:38', 'Past Date');
 
 -- --------------------------------------------------------
 
@@ -185,7 +209,8 @@ INSERT INTO `booking_room` (`booking_ID`, `room_ID`, `num_Guest`, `nightly_Rate`
 (2, 2, 2, 3500.00, 1000.00, 2, NULL, NULL, NULL),
 (3, 4, 4, 6000.00, 0.00, 4, NULL, NULL, NULL),
 (4, 4, 4, 6000.00, 0.00, 4, NULL, NULL, NULL),
-(5, 2, 2, 3500.00, 1000.00, 2, NULL, NULL, NULL);
+(5, 2, 2, 3500.00, 1000.00, 2, NULL, NULL, NULL),
+(6, 5, 4, 6000.00, 0.00, 4, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -229,6 +254,24 @@ CREATE TABLE `feature` (
   `deleted_At` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `feature`
+--
+
+INSERT INTO `feature` (`feature_ID`, `feature_Name`, `deleted_At`) VALUES
+(1, 'Free Wi-Fi', NULL),
+(2, 'Air Conditioning', NULL),
+(3, 'Television', NULL),
+(4, 'Private Bathroom', NULL),
+(5, 'Mountain View', NULL),
+(6, 'Hot and Cold Shower', NULL),
+(7, 'Seating Area', NULL),
+(8, 'Parking Access', NULL),
+(9, 'Sound System', NULL),
+(10, 'Projector', NULL),
+(11, 'Dining Area', NULL),
+(12, 'Function Area', NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -240,6 +283,14 @@ CREATE TABLE `floor` (
   `floor_Number` int(11) NOT NULL,
   `deleted_At` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `floor`
+--
+
+INSERT INTO `floor` (`floor_ID`, `floor_Number`, `deleted_At`) VALUES
+(1, 1, NULL),
+(2, 2, NULL);
 
 -- --------------------------------------------------------
 
@@ -337,7 +388,8 @@ CREATE TABLE `payment` (
 
 INSERT INTO `payment` (`payment_ID`, `booking_ID`, `payment_Method_ID`, `processed_By`, `payment_Status_ID`, `payment_Type_ID`, `amount`, `reference_No`, `payment_Date`, `created_At`, `deleted_At`) VALUES
 (1, 1, 3, NULL, 1, 1, 3330.00, 'GCASH20261116001', NULL, '2026-11-16 18:07:30', NULL),
-(2, 5, 2, NULL, 1, 1, 3150.00, 'GCASH20261116001', NULL, '2026-11-17 16:27:58', NULL);
+(2, 5, 2, NULL, 1, 1, 3150.00, 'GCASH20261116001', NULL, '2026-11-17 16:27:58', NULL),
+(4, 6, 3, 7, 4, 1, 1920.00, '4wtwtwtwgwgw', NULL, '2026-11-18 23:29:35', NULL);
 
 -- --------------------------------------------------------
 
@@ -425,12 +477,12 @@ CREATE TABLE `room` (
 --
 
 INSERT INTO `room` (`room_ID`, `room_Type_ID`, `floor_ID`, `room_Status_ID`, `room_Code`, `deleted_At`) VALUES
-(1, 1, NULL, 1, 'Room A', NULL),
-(2, 1, NULL, 1, 'Room B', NULL),
-(3, 1, NULL, 1, 'Room C', NULL),
-(4, 2, NULL, 1, 'FR1', NULL),
-(5, 2, NULL, 1, 'FR2', NULL),
-(6, 2, NULL, 1, 'FR3', NULL),
+(1, 1, 1, 1, 'Room A', NULL),
+(2, 1, 1, 1, 'Room B', NULL),
+(3, 1, 1, 1, 'Room C', NULL),
+(4, 2, 2, 1, 'FR1', NULL),
+(5, 2, 2, 1, 'FR2', NULL),
+(6, 2, 2, 1, 'FR3', NULL),
 (7, 3, NULL, 1, 'Event Hall', NULL);
 
 -- --------------------------------------------------------
@@ -486,6 +538,38 @@ INSERT INTO `room_type` (`room_Type_ID`, `room_Type`, `base_Price`, `included_Gu
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `room_type_addon`
+--
+
+CREATE TABLE `room_type_addon` (
+  `room_Type_ID` int(10) UNSIGNED NOT NULL,
+  `addon_ID` int(10) UNSIGNED NOT NULL,
+  `deleted_At` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `room_type_addon`
+--
+
+INSERT INTO `room_type_addon` (`room_Type_ID`, `addon_ID`, `deleted_At`) VALUES
+(1, 1, NULL),
+(1, 2, NULL),
+(1, 3, NULL),
+(1, 4, NULL),
+(1, 5, NULL),
+(1, 6, NULL),
+(2, 1, NULL),
+(2, 2, NULL),
+(2, 3, NULL),
+(2, 4, NULL),
+(2, 5, NULL),
+(2, 6, NULL),
+(3, 7, NULL),
+(3, 8, NULL);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `room_type_bed_type`
 --
 
@@ -495,6 +579,14 @@ CREATE TABLE `room_type_bed_type` (
   `num_Beds` int(10) UNSIGNED NOT NULL,
   `deleted_At` datetime DEFAULT NULL
 ) ;
+
+--
+-- Dumping data for table `room_type_bed_type`
+--
+
+INSERT INTO `room_type_bed_type` (`room_Type_ID`, `bed_Type_ID`, `num_Beds`, `deleted_At`) VALUES
+(1, 3, 1, NULL),
+(2, 3, 2, NULL);
 
 -- --------------------------------------------------------
 
@@ -507,6 +599,35 @@ CREATE TABLE `room_type_feature` (
   `feature_ID` int(10) UNSIGNED NOT NULL,
   `deleted_At` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `room_type_feature`
+--
+
+INSERT INTO `room_type_feature` (`room_Type_ID`, `feature_ID`, `deleted_At`) VALUES
+(1, 1, NULL),
+(1, 2, NULL),
+(1, 3, NULL),
+(1, 4, NULL),
+(1, 5, NULL),
+(1, 6, NULL),
+(1, 8, NULL),
+(2, 1, NULL),
+(2, 2, NULL),
+(2, 3, NULL),
+(2, 4, NULL),
+(2, 5, NULL),
+(2, 6, NULL),
+(2, 7, NULL),
+(2, 8, NULL),
+(3, 1, NULL),
+(3, 2, NULL),
+(3, 7, NULL),
+(3, 8, NULL),
+(3, 9, NULL),
+(3, 10, NULL),
+(3, 11, NULL),
+(3, 12, NULL);
 
 -- --------------------------------------------------------
 
@@ -537,7 +658,10 @@ INSERT INTO `users` (`user_ID`, `role_ID`, `account_Status_ID`, `first_Name`, `l
 (3, 3, 1, 'Russel', 'Cabucos', 'russ@gmail.com', '09943035821', NULL, '2026-11-16 20:32:23', NULL),
 (4, 3, 1, 'Russel', 'Cabucos', 'rj@gmail.com', '09943035821', NULL, '2026-11-16 22:01:35', NULL),
 (5, 3, 1, 'matthew', 'aquino', 'matt@gmail.com', '09943035821', NULL, '2026-11-17 16:15:45', NULL),
-(6, 3, 1, 'Mary', 'Hammed', 'mary@gmail.com', '09943035821', '$2y$10$Nv8ZtqlsFqcmCYZ/hfkOU.fozzxiASzJH2YYpnzH7F9uuwpknDyRO', '2026-11-17 21:12:44', NULL);
+(6, 3, 1, 'Mary', 'Hammed', 'mary@gmail.com', '09943035821', '$2y$10$Nv8ZtqlsFqcmCYZ/hfkOU.fozzxiASzJH2YYpnzH7F9uuwpknDyRO', '2026-11-17 21:12:44', NULL),
+(7, 1, 1, 'Russel John', 'Cabucos', 'russeljohnto@gmail.com', '09943035821', '$2y$10$S0krgkWufqhATWpk1hha/uO4MkLMNb3dzkz3aJuqgk9sioqZYbjhK', '2026-11-18 20:19:15', NULL),
+(8, 3, 1, 'agaga', 'gagaga', 'gagagagaa@gmail.com', '09943035821', '$2y$10$S2cLuMgTyh9J27JNQfM3x.a9hj.mtX7AuTC1kYs9KuDlO5YJ.Mz12', '2026-11-18 23:26:29', NULL),
+(9, 3, 1, 'shshshs', 'hshshs', 'halo@gmail.com', '09943035821', NULL, '2026-11-18 23:28:48', NULL);
 
 -- --------------------------------------------------------
 
@@ -725,6 +849,13 @@ ALTER TABLE `room_type`
   ADD UNIQUE KEY `uq_room_type_name` (`room_Type`);
 
 --
+-- Indexes for table `room_type_addon`
+--
+ALTER TABLE `room_type_addon`
+  ADD PRIMARY KEY (`room_Type_ID`,`addon_ID`),
+  ADD KEY `idx_rta_addon` (`addon_ID`);
+
+--
 -- Indexes for table `room_type_bed_type`
 --
 ALTER TABLE `room_type_bed_type`
@@ -775,7 +906,7 @@ ALTER TABLE `addon`
 -- AUTO_INCREMENT for table `bed_type`
 --
 ALTER TABLE `bed_type`
-  MODIFY `bed_Type_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `bed_Type_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `booking`
@@ -787,7 +918,7 @@ ALTER TABLE `booking`
 -- AUTO_INCREMENT for table `booking_log`
 --
 ALTER TABLE `booking_log`
-  MODIFY `log_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `log_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `booking_status`
@@ -799,13 +930,13 @@ ALTER TABLE `booking_status`
 -- AUTO_INCREMENT for table `feature`
 --
 ALTER TABLE `feature`
-  MODIFY `feature_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `feature_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `floor`
 --
 ALTER TABLE `floor`
-  MODIFY `floor_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `floor_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `housekeeping_status`
@@ -865,7 +996,7 @@ ALTER TABLE `room_type`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `user_ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `user_role`
@@ -933,6 +1064,13 @@ ALTER TABLE `room`
   ADD CONSTRAINT `fk_room_floor` FOREIGN KEY (`floor_ID`) REFERENCES `floor` (`floor_ID`),
   ADD CONSTRAINT `fk_room_status` FOREIGN KEY (`room_Status_ID`) REFERENCES `room_status` (`room_Status_ID`),
   ADD CONSTRAINT `fk_room_type` FOREIGN KEY (`room_Type_ID`) REFERENCES `room_type` (`room_Type_ID`);
+
+--
+-- Constraints for table `room_type_addon`
+--
+ALTER TABLE `room_type_addon`
+  ADD CONSTRAINT `fk_rta_addon` FOREIGN KEY (`addon_ID`) REFERENCES `addon` (`addon_ID`),
+  ADD CONSTRAINT `fk_rta_room_type` FOREIGN KEY (`room_Type_ID`) REFERENCES `room_type` (`room_Type_ID`);
 
 --
 -- Constraints for table `room_type_bed_type`
