@@ -2,10 +2,11 @@
 
 require_once __DIR__ . '/../includes/auth_session.php';
 
-$authError = '';
+$authError = $_SESSION['auth_guard_error'] ?? '';
 $authSuccess = $_SESSION['auth_success'] ?? '';
 
 unset($_SESSION['auth_success']);
+unset($_SESSION['auth_guard_error']);
 
 $email = '';
 
@@ -120,8 +121,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['auth_token'] =
                     bin2hex(random_bytes(32));
 
-                // Temporary destination
-                header('Location: auth_account.php', true, 303);
+                // Route using the verified database role, never a submitted role.
+                header('Location: ../' . authDashboardPath($user['role_Name']), true, 303);
                 exit;
 
             }
@@ -156,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Sign In | Bella Vista Hotel</title>
 
     <link rel="stylesheet" href="../assets/css/global_style.css">
-    <link rel="stylesheet" href="../assets/css/login.css?v=5">
+    <link rel="stylesheet" href="../assets/css/login.css?v=6">
     <link rel="stylesheet" href="../assets/css/responsive_landing.css?v=19">
 
 </head>
@@ -363,6 +364,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <dialog
         id="loginFeedbackModal"
         class="auth-feedback-modal"
+        data-auto-open="<?= ($authError || $authSuccess) ? 'true' : 'false' ?>"
         aria-labelledby="authModalTitle"
         aria-describedby="authModalMessage"
     >

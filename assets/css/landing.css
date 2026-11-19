@@ -159,6 +159,14 @@ html {
     transition: color 0.2s ease;
 }
 
+.nav-links .nav-account-link {
+    min-width: 0;
+    max-width: clamp(70px, 20vw, 150px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .nav-links a:hover {
     color: #E6D3AD;
 }

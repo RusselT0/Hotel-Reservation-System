@@ -1,4 +1,3 @@
-
 <?php
 
 // Philippine Standard Time

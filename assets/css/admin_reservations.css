@@ -1,0 +1,37 @@
+.reservation-panel { background: var(--admin-surface); border: 1px solid var(--admin-border); border-radius: 12px; padding: 20px; }
+.reservation-filter { display: grid; grid-template-columns: minmax(180px, 1.5fr) minmax(135px, 1fr) auto auto; align-items: end; gap: 12px; margin-bottom: 20px; }
+.reservation-filter label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var(--primary); }
+.reservation-filter input, .reservation-filter select { width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid var(--admin-border); border-radius: 7px; background: #fff; color: var(--text); font: inherit; font-weight: 400; }
+.reservation-button, .reservation-secondary, .reservation-detail-link { display: inline-block; border: 1px solid var(--primary); border-radius: 7px; padding: 9px 14px; background: var(--primary); color: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.reservation-secondary { background: #fff; color: var(--primary); }
+.reservation-table-wrap { overflow-x: auto; max-width: 100%; border: 1px solid var(--admin-border); border-radius: 8px; }
+.reservation-table { width: 100%; min-width: 860px; border-collapse: collapse; font-size: 13px; text-align: left; }
+.reservation-table th { background: #edf0e9; color: var(--primary); font-size: 12px; padding: 13px 12px; white-space: nowrap; }
+.reservation-table td { border-top: 1px solid var(--admin-border); padding: 14px 12px; vertical-align: top; overflow-wrap: anywhere; }
+.reservation-table td > span:not(.reservation-status), .reservation-table td small { display: block; }
+.reservation-table td small { color: var(--admin-muted); margin-top: 4px; }
+.reservation-table tr:hover td { background: #fafbf8; }
+.reservation-status { display: inline-block; padding: 4px 8px; font-size: 11px; font-weight: 700; color: var(--primary); background: #e9ede4; border-radius: 5px; }
+.reservation-detail-link { padding: 6px 12px; }
+.reservation-empty { text-align: center; color: var(--admin-muted); }
+.reservation-pagination { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; font-size: 13px; color: var(--admin-muted); }
+.reservation-pagination a { color: var(--primary); text-decoration: underline; font-weight: 600; }
+.reservation-dialog { position: fixed; inset: 0; margin: auto; border: 0; border-radius: 14px; width: min(720px, calc(100% - 26px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 24px; color: var(--text); }
+.reservation-dialog::backdrop { background: rgba(0,0,0,.58); }
+.reservation-dialog-heading { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+.reservation-dialog h2 { color: var(--primary); }
+.reservation-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 20px; }
+.reservation-details-grid dt { font-size: 12px; color: var(--admin-muted); }
+.reservation-details-grid dd { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.reservation-detail-section { border-top: 1px solid var(--admin-border); margin-top: 19px; padding-top: 16px; }
+.reservation-detail-section h3 { font-size: 16px; color: var(--primary); margin-bottom: 8px; }
+.reservation-detail-section article { background: #f7f7f2; border-radius: 7px; padding: 12px; margin-bottom: 7px; overflow-wrap: anywhere; }
+.reservation-detail-section p { color: var(--admin-muted); font-size: 13px; }
+.reservation-decision form { display: grid; gap: 10px; background: #f7f7f2; border: 1px solid var(--admin-border); border-radius: 7px; padding: 14px; margin-bottom: 10px; }
+.reservation-decision label { font-size: 13px; font-weight: 600; color: var(--primary); }
+.reservation-review-check { display: flex; align-items: flex-start; gap: 8px; }
+.reservation-review-check input { margin-top: 4px; }
+.reservation-decision textarea { width: 100%; border: 1px solid var(--admin-border); padding: 10px; border-radius: 6px; background: #fff; font: inherit; resize: vertical; }
+.reservation-decline { border: 1px solid #a44c40; background: #fff; color: #8c4036; border-radius: 7px; padding: 10px 14px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+@media (max-width: 800px) { .reservation-filter { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 500px) { .reservation-panel, .reservation-dialog { padding: 14px; } .reservation-filter, .reservation-details-grid { grid-template-columns: minmax(0, 1fr); } }

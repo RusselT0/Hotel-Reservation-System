@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/database.php';
+require_once __DIR__ . '/../includes/auth_session.php';
+$currentUser = authCurrentUser($pdo);
 
 // Retrieve room types from database
 $stmt = $pdo->query("
@@ -33,9 +35,9 @@ $guests = searchValue('guests');
 
     <title>Room Availability | Bella Vista Hotel</title>
     <link rel="stylesheet" href="../assets/css/global_style.css">
-    <link rel="stylesheet" href="../assets/css/landing.css">
+    <link rel="stylesheet" href="../assets/css/landing.css?v=4">
     <link rel="stylesheet" href="../assets/css/availability_form.css?v=2">
-    <link rel="stylesheet" href="../assets/css/availability_page.css?v=2">
+    <link rel="stylesheet" href="../assets/css/availability_page.css?v=3">
     <link rel="stylesheet" href="../assets/css/responsive_landing.css?v=3">
 </head>
 
@@ -63,7 +65,11 @@ $guests = searchValue('guests');
             <a href="../index.php#about">About Us</a>
             <a href="../index.php#gallery">Gallery</a>
             <a href="../index.php#rooms">Rooms & Facilities</a>
-            <a href="login.php">Sign In / Register</a>
+            <?php if ($currentUser): ?>
+                <a href="../<?= authEscape(authDashboardPath($currentUser['role'])) ?>" class="nav-account-link" title="Your dashboard"><?= authEscape($currentUser['first_name']) ?></a>
+            <?php else: ?>
+                <a href="login.php">Sign In / Register</a>
+            <?php endif; ?>
         </div>
 
     </nav>
@@ -219,9 +225,7 @@ $guests = searchValue('guests');
 
 <script src="../assets/js/navbar.js" defer></script>
 <script src="../assets/js/availability_validation.js" defer></script>
-<script src="../assets/js/availability_results.js?v=1" defer></script>
-
-<!-- We will connect the results rendering in Step 7.3 -->
+<script src="../assets/js/availability_results.js?v=2" defer></script>
 
 <!-- FOOTER -->
     <footer class="footer">

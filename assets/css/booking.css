@@ -363,6 +363,43 @@
     margin: 0;
 }
 
+.bk-room-metadata {
+    margin-top: 10px;
+    color: var(--bk-muted);
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.bk-room-metadata p {
+    margin: 6px 0;
+}
+
+.bk-room-amenities summary {
+    cursor: pointer;
+    color: var(--bk-green);
+    font-weight: 600;
+}
+
+.bk-room-amenities ul {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    gap: 5px;
+    padding: 0;
+    margin: 8px 0 0;
+}
+
+.bk-room-amenities li {
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 4px 8px;
+    border-radius: 5px;
+    background: #e5e8df;
+    color: var(--bk-green);
+    font-size: 12px;
+}
+
 .bk-summary-content h3 {
     color: var(--bk-green);
     font-size: 15px;

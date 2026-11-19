@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once __DIR__ . '/../includes/auth_session.php';
 
 // ========================================
 // 1. RETRIEVE SUCCESSFUL BOOKING DETAILS
@@ -34,6 +34,7 @@ function e($value): string {
 // ========================================
 
 require_once __DIR__ . '/../includes/database.php';
+$currentUser = authCurrentUser($pdo);
 
 // One-time security token for payment submission
 if (empty($_SESSION['payment_token'])) {
@@ -218,7 +219,7 @@ if (!empty($paymentError)) {
     </title>
 
     <link rel="stylesheet" href="../assets/css/global_style.css">
-    <link rel="stylesheet" href="../assets/css/landing.css?v=3">
+    <link rel="stylesheet" href="../assets/css/landing.css?v=4">
     <link rel="stylesheet" href="../assets/css/booking_created.css?v=3">
     <link rel="stylesheet" href="../assets/css/responsive_landing.css?v=18">
 </head>
@@ -246,7 +247,11 @@ if (!empty($paymentError)) {
                     <a href="../index.php#about">About Us</a>
                     <a href="../index.php#gallery">Gallery</a>
                     <a href="../index.php#rooms">Rooms & Facilities</a>
-                    <a href="login.php">Sign In / Register</a>
+                    <?php if ($currentUser): ?>
+                        <a href="../<?= authEscape(authDashboardPath($currentUser['role'])) ?>" class="nav-account-link" title="Your dashboard"><?= authEscape($currentUser['first_name']) ?></a>
+                    <?php else: ?>
+                        <a href="login.php">Sign In / Register</a>
+                    <?php endif; ?>
                 </div>
 
         </nav>
@@ -563,7 +568,7 @@ if (!empty($paymentError)) {
                         </div>
 
                         <a
-                            href="index.php"
+                            href="../index.php"
                             class="bc-secondary-link"
                         >
                             Search for Another Room
@@ -752,7 +757,7 @@ if (!empty($paymentError)) {
 
         <div class="bc-bottom-links">
 
-            <a href="index.php">
+            <a href="../index.php">
                 Return to Home
             </a>
 

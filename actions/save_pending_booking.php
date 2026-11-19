@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once __DIR__ . '/../includes/auth_session.php';
 require_once __DIR__ . '/../includes/database.php';
 
 // ========================================
@@ -49,6 +49,7 @@ $checkout = $review['checkout'] ?? null;
 
 $guest = $review['guest'] ?? null;
 $selections = $review['addons'] ?? null;
+$reviewGuestID = $review['auth_guest_id'] ?? null;
 
 try {
 
@@ -215,6 +216,7 @@ try {
     $stmt = $pdo->prepare("
         SELECT
             r.room_ID,
+            r.room_Type_ID,
             r.room_Code,
             rs.ready_For_Checkin,
             rt.base_Price,
@@ -336,10 +338,13 @@ try {
     $addonsCents = 0;
 
     $addonStmt = $pdo->prepare("
-        SELECT addon_ID, addon_Price
-        FROM Addon
-        WHERE addon_ID = ?
-          AND deleted_At IS NULL
+        SELECT a.addon_ID, a.addon_Price
+        FROM addon a
+        JOIN room_type_addon rta ON rta.addon_ID = a.addon_ID
+        WHERE a.addon_ID = ?
+          AND rta.room_Type_ID = ?
+          AND rta.deleted_At IS NULL
+          AND a.deleted_At IS NULL
         FOR UPDATE
     ");
 
@@ -366,14 +371,14 @@ try {
             );
         }
 
-        $addonStmt->execute([$id]);
+        $addonStmt->execute([$id, (int)$room['room_Type_ID']]);
 
         $addon = $addonStmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$addon) {
             throw new RuntimeException(
                 'One of the selected add-ons ' .
-                'is no longer available.'
+                'is no longer available for the selected room type.'
             );
         }
 
@@ -410,27 +415,53 @@ try {
     }
 
     // ========================================
-    // 12. CHECK FOR EXISTING GUEST EMAIL
+    // 12. RESOLVE VERIFIED GUEST IDENTITY
     // ========================================
 
-    $existingStmt = $pdo->prepare("
-        SELECT user_ID
-        FROM Users
-        WHERE email_Address = ?
-        LIMIT 1
-        FOR UPDATE
-    ");
+    // Revalidate the session and lock the live account before saving.
+    $hadAccountSession = isset($_SESSION['auth_user']);
+    $currentUser = authCurrentUser($pdo, true);
+    $currentGuest = $currentUser && $currentUser['role'] === 'Guest'
+        ? $currentUser
+        : null;
+    $currentGuestID = $currentGuest['user_id'] ?? null;
 
-    $existingStmt->execute([
-        $guest['email_Address']
-    ]);
+    if (($hadAccountSession && !$currentUser) || $reviewGuestID !== $currentGuestID) {
+        unset($_SESSION['booking_review']);
+        throw new RuntimeException('Your account session changed. Please review the booking again.');
+    }
 
-    if ($existingStmt->fetch()) {
-        throw new RuntimeException(
-            'This email has an existing record. ' .
-            'Verified sign-in or email confirmation ' .
-            'is required to reuse it.'
-        );
+    $userID = null;
+
+    if ($currentGuest) {
+        // The reviewed contact details must still match the authenticated account.
+        if ($guest['first_Name'] !== trim((string)$currentGuest['first_name']) ||
+            $guest['last_Name'] !== trim((string)$currentGuest['last_name']) ||
+            $guest['email_Address'] !== trim((string)$currentGuest['email']) ||
+            $guest['phone_Number'] !== trim((string)$currentGuest['phone_number'])) {
+            unset($_SESSION['booking_review']);
+            throw new RuntimeException('Your account details changed. Please review the booking again.');
+        }
+        $userID = $currentGuestID;
+    } else {
+        // Anonymous visitors may book with a new email, but cannot claim an existing account.
+        $existingStmt = $pdo->prepare("
+            SELECT user_ID
+            FROM Users
+            WHERE email_Address = ?
+            LIMIT 1
+            FOR UPDATE
+        ");
+
+        $existingStmt->execute([$guest['email_Address']]);
+
+        if ($existingStmt->fetch()) {
+            throw new RuntimeException(
+                'This email has an existing record. ' .
+                'Verified sign-in or email confirmation ' .
+                'is required to reuse it.'
+            );
+        }
     }
 
     // ========================================
@@ -475,32 +506,34 @@ try {
     }
 
     // ========================================
-    // 14. INSERT GUEST INTO USERS
+    // 14. INSERT ONLY NEW ANONYMOUS GUESTS
     // ========================================
 
-    $userInsert = $pdo->prepare("
-        INSERT INTO Users (
-            role_ID,
-            account_Status_ID,
-            first_Name,
-            last_Name,
-            email_Address,
-            phone_Number,
-            password_Hash
-        )
-        VALUES (?, ?, ?, ?, ?, ?, NULL)
-    ");
+    if ($userID === null) {
+        $userInsert = $pdo->prepare("
+            INSERT INTO Users (
+                role_ID,
+                account_Status_ID,
+                first_Name,
+                last_Name,
+                email_Address,
+                phone_Number,
+                password_Hash
+            )
+            VALUES (?, ?, ?, ?, ?, ?, NULL)
+        ");
 
-    $userInsert->execute([
-        $roleID,
-        $accountStatusID,
-        $guest['first_Name'],
-        $guest['last_Name'],
-        $guest['email_Address'],
-        $guest['phone_Number']
-    ]);
+        $userInsert->execute([
+            $roleID,
+            $accountStatusID,
+            $guest['first_Name'],
+            $guest['last_Name'],
+            $guest['email_Address'],
+            $guest['phone_Number']
+        ]);
 
-    $userID = (int)$pdo->lastInsertId();
+        $userID = (int)$pdo->lastInsertId();
+    }
 
     // ========================================
     // 15. CALCULATE 30-MINUTE HOLD EXPIRY

@@ -167,12 +167,17 @@ try {
     $sql = "
         SELECT
             r.room_ID,
-            r.room_Code
+            r.room_Code,
+            f.floor_Number
 
         FROM Room r
 
         INNER JOIN Room_Status rs
             ON r.room_Status_ID = rs.room_Status_ID
+
+        LEFT JOIN floor f
+            ON f.floor_ID = r.floor_ID
+            AND f.deleted_At IS NULL
 
         WHERE r.room_Type_ID = :type_id
 
@@ -221,10 +226,50 @@ try {
 
     $availableRooms = $stmt->fetchAll();
 
-    // STEP D: Return results
-        sendResponse(200, [
+    foreach ($availableRooms as &$room) {
+        $room['floor_Number'] = $room['floor_Number'] === null
+            ? null
+            : (int)$room['floor_Number'];
+    }
+    unset($room);
+
+    // STEP D: Retrieve metadata once for the selected room type
+    $stmt = $pdo->prepare(
+        "SELECT f.feature_Name
+         FROM room_type_feature rtf
+         INNER JOIN feature f ON rtf.feature_ID = f.feature_ID
+         WHERE rtf.room_Type_ID = :type_id
+         AND rtf.deleted_At IS NULL
+         AND f.deleted_At IS NULL
+         ORDER BY f.feature_ID"
+    );
+    $stmt->execute(['type_id' => (int)$roomType['room_Type_ID']]);
+    $features = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    $stmt = $pdo->prepare(
+        "SELECT bt.bed_Type_Name, rtb.num_Beds
+         FROM room_type_bed_type rtb
+         INNER JOIN bed_type bt ON rtb.bed_Type_ID = bt.bed_Type_ID
+         WHERE rtb.room_Type_ID = :type_id
+         AND rtb.deleted_At IS NULL
+         AND bt.deleted_At IS NULL
+         ORDER BY bt.bed_Type_ID"
+    );
+    $stmt->execute(['type_id' => (int)$roomType['room_Type_ID']]);
+    $beds = [];
+
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $bed) {
+        $beds[] = [
+            'type' => $bed['bed_Type_Name'],
+            'quantity' => (int)$bed['num_Beds']
+        ];
+    }
+
+    // STEP E: Return results and room metadata
+    sendResponse(200, [
         'success' => true,
         'room_type' => $roomType['room_Type'],
+        'room_type_id' => (int)$roomType['room_Type_ID'],
         'checkin' => $checkin,
         'checkout' => $checkout,
         'guests' => $guestCount,
@@ -237,7 +282,9 @@ try {
 
         // Available rooms
         'available_count' => count($availableRooms),
-        'rooms' => $availableRooms
+        'rooms' => $availableRooms,
+        'features' => $features,
+        'beds' => $beds
     ]);
 
 } catch (Throwable $e) {

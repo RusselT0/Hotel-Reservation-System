@@ -35,6 +35,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         }).format(Number(amount));
     }
 
+    function showResultsError(message) {
+        const modal = document.getElementById("availabilityErrorModal");
+        document.getElementById("availabilityErrorMessage").textContent = message;
+
+        if (!modal.open) {
+            modal.showModal();
+        }
+    }
+
     // Create an individual room card
     function createRoomCard(room, data) {
 
@@ -58,6 +67,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         const roomType = document.createElement("p");
         roomType.textContent = data.room_type;
 
+        if (room.floor_Number != null) {
+            roomType.textContent += ` • Floor ${room.floor_Number}`;
+        }
+
         const status = document.createElement("p");
         status.className = "avp-available-text";
         status.textContent = "✓ Available for selected dates";
@@ -68,6 +81,41 @@ document.addEventListener("DOMContentLoaded", async () => {
             `Maximum ${data.max_guests} guests`;
 
         details.append(title, roomType, status, capacity);
+
+        // Bed configuration and amenities come from the selected room type.
+        if (data.beds?.length) {
+            const beds = document.createElement("p");
+            beds.textContent = "Beds: " + data.beds.map(bed =>
+                `${bed.quantity} × ${bed.type}`
+            ).join(", ");
+            details.append(beds);
+        }
+
+        if (data.features?.length) {
+            const featuresLabel = document.createElement("h3");
+            featuresLabel.className = "avp-features-label";
+            featuresLabel.textContent = "Amenities";
+
+            const features = document.createElement("ul");
+            features.className = "avp-room-features";
+
+            data.features.forEach(feature => {
+                const item = document.createElement("li");
+                item.textContent = feature;
+                features.append(item);
+            });
+
+            details.append(featuresLabel, features);
+        }
+
+        if (data.max_guests > data.included_guests) {
+            const fee = document.createElement("p");
+            fee.className = "avp-extra-fee";
+            fee.textContent = Number(data.extra_person_fee) > 0
+                ? `${formatPrice(data.extra_person_fee)} per additional guest (one-time per reservation).`
+                : "No extra fee for additional guests within capacity.";
+            details.append(fee);
+        }
 
         // PRICE SECTION
         const priceSection = document.createElement("div");
@@ -129,8 +177,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             availabilityCount.textContent =
                 "Unable to load results";
 
-            resultsContainer.textContent =
-                data.message || "Please try another search.";
+            showResultsError(data.message || "Please try another search.");
 
             return;
         }
@@ -171,8 +218,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         availabilityCount.textContent =
             "Unable to load availability";
 
-        resultsContainer.textContent =
-            "Something went wrong while loading the rooms.";
+        resultsContainer.replaceChildren();
+        showResultsError("Something went wrong while loading the rooms.");
 
     }
 

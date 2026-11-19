@@ -469,6 +469,9 @@
 ========================================== */
 
 .auth-feedback-modal {
+    --auth-green: #34402b;
+    --auth-muted: #747b70;
+    --auth-gold: #a78c51;
     position: fixed;
 
     top: 50%;

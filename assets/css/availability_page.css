@@ -204,6 +204,7 @@
 
 .avp-room-details {
     min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .avp-room-image {
@@ -229,6 +230,38 @@
 .avp-available-text {
     color: #318053 !important;
     font-weight: 600;
+}
+
+.avp-features-label {
+    margin: 12px 0 6px;
+    font-size: 13px;
+    color: #34402b;
+}
+
+.avp-room-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.avp-room-features li {
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 4px 8px;
+    border-radius: 5px;
+    background: #e5e8df;
+    color: #34402b;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.avp-room-details .avp-extra-fee {
+    margin-top: 10px;
+    font-size: 12px;
+    line-height: 1.5;
 }
 
 /* PRICE SECTION */

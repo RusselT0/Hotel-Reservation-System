@@ -1,12 +1,12 @@
-
 <?php
 
-session_start();
+require_once __DIR__ . '/../includes/auth_session.php';
 
 $bookingSaveError = $_SESSION['booking_save_error'] ?? null;
 unset($_SESSION['booking_save_error']);
 
 require_once __DIR__ . '/../includes/database.php';
+$currentUser = authCurrentUser($pdo);
 
 // Receive booking information from URL
 $roomID = filter_input(
@@ -27,6 +27,9 @@ $guests = filter_input(
 $error = null;
 $room = null;
 $nights = 0;
+$roomBeds = [];
+$roomFeatures = [];
+$roomMetadataError = null;
 
 $timezone = new DateTimeZone('Asia/Manila');
 
@@ -79,6 +82,8 @@ if (
             SELECT
                 r.room_ID,
                 r.room_Code,
+                rt.room_Type_ID,
+                f.floor_Number,
                 rt.room_Type,
                 rt.base_Price,
                 rt.included_Guests,
@@ -89,6 +94,10 @@ if (
 
             INNER JOIN Room_Type rt
                 ON r.room_Type_ID = rt.room_Type_ID
+
+            LEFT JOIN floor f
+                ON f.floor_ID = r.floor_ID
+                AND f.deleted_At IS NULL
 
             WHERE r.room_ID = :room_id
               AND r.deleted_At IS NULL
@@ -113,6 +122,36 @@ if (
                    . $guests . " guests.";
 
         }
+    }
+}
+
+// Retrieve display-only metadata for the selected room type.
+if ($room && $error === null) {
+    try {
+        $stmt = $pdo->prepare(
+            "SELECT bt.bed_Type_Name, rtb.num_Beds
+             FROM room_type_bed_type rtb
+             JOIN bed_type bt ON bt.bed_Type_ID = rtb.bed_Type_ID
+             WHERE rtb.room_Type_ID = :type_id
+             AND rtb.deleted_At IS NULL AND bt.deleted_At IS NULL
+             ORDER BY bt.bed_Type_ID"
+        );
+        $stmt->execute(['type_id' => (int)$room['room_Type_ID']]);
+        $roomBeds = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmt = $pdo->prepare(
+            "SELECT f.feature_Name
+             FROM room_type_feature rtf
+             JOIN feature f ON f.feature_ID = rtf.feature_ID
+             WHERE rtf.room_Type_ID = :type_id
+             AND rtf.deleted_At IS NULL AND f.deleted_At IS NULL
+             ORDER BY f.feature_ID"
+        );
+        $stmt->execute(['type_id' => (int)$room['room_Type_ID']]);
+        $roomFeatures = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    } catch (Throwable $e) {
+        error_log('Booking room metadata: ' . $e->getMessage());
+        $roomMetadataError = 'Some room details could not be loaded. You can still continue your reservation.';
     }
 }
 
@@ -183,12 +222,16 @@ try {
 if ($error === null) {
 
     try {
-        $stmt = $pdo->query(
-            "SELECT addon_ID, addon_Name, addon_Price
-             FROM Addon
-             WHERE deleted_At IS NULL
-             ORDER BY addon_Name ASC"
+        $stmt = $pdo->prepare(
+            "SELECT a.addon_ID, a.addon_Name, a.addon_Price
+             FROM addon a
+             JOIN room_type_addon rta ON rta.addon_ID = a.addon_ID
+             WHERE rta.room_Type_ID = :type_id
+               AND rta.deleted_At IS NULL
+               AND a.deleted_At IS NULL
+             ORDER BY a.addon_Name ASC"
         );
+        $stmt->execute(['type_id' => (int)$room['room_Type_ID']]);
 
         $addons = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -207,12 +250,17 @@ if ($error === null) {
    GUEST INFORMATION PROCESSING
 ======================================== */
 
-// Default form values
+// Prefill only from a verified, signed-in Guest account.
+$authenticatedGuest = $currentUser && $currentUser['role'] === 'Guest'
+    ? $currentUser
+    : null;
+
+// Default form values (anonymous guests retain empty fields).
 $guestData = [
-    'first_Name' => '',
-    'last_Name' => '',
-    'email_Address' => '',
-    'phone_Number' => ''
+    'first_Name' => $authenticatedGuest['first_name'] ?? '',
+    'last_Name' => $authenticatedGuest['last_name'] ?? '',
+    'email_Address' => $authenticatedGuest['email'] ?? '',
+    'phone_Number' => $authenticatedGuest['phone_number'] ?? ''
 ];
 
 $guestError = null;
@@ -227,6 +275,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
 
     // Retrieve submitted values
     foreach ($guestData as $field => $default) {
+
+        // Account identity comes from the database, not submitted form values.
+        if ($authenticatedGuest) {
+            continue;
+        }
 
         $value = $_POST[$field] ?? '';
 
@@ -289,7 +342,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
 
                 $addonID = (string)$addonID;
 
-                // Only accept add-ons that exist in the database
+                // Only accept active add-ons applicable to the selected room type.
                 if (
                     !ctype_digit($addonID) ||
                     !isset($addonLookup[(int)$addonID]) ||
@@ -466,6 +519,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                             'guests' => (int)$guests,
 
                             'guest' => $guestData,
+                            'auth_guest_id' => $authenticatedGuest['user_id'] ?? null,
 
                             'addons' => array_filter(
                                 $selectedAddons,
@@ -496,8 +550,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
     <title>Book a Room | Bella Vista Hotel</title>
 
     <link rel="stylesheet" href="../assets/css/global_style.css">
-    <link rel="stylesheet" href="../assets/css/landing.css?v=3">
-    <link rel="stylesheet" href="../assets/css/booking.css?v=6">
+    <link rel="stylesheet" href="../assets/css/landing.css?v=4">
+    <link rel="stylesheet" href="../assets/css/booking.css?v=7">
     <link rel="stylesheet" href="../assets/css/responsive_landing.css?v=3">
 </head>
 
@@ -523,7 +577,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                     <a href="../index.php#about">About Us</a>
                     <a href="../index.php#gallery">Gallery</a>
                     <a href="../index.php#rooms">Rooms & Facilities</a>
-                    <a href="login.php">Sign In / Register</a>
+                    <?php if ($currentUser): ?>
+                        <a href="../<?= authEscape(authDashboardPath($currentUser['role'])) ?>" class="nav-account-link" title="Your dashboard"><?= authEscape($currentUser['first_name']) ?></a>
+                    <?php else: ?>
+                        <a href="login.php">Sign In / Register</a>
+                    <?php endif; ?>
                 </div>
 
             </nav>
@@ -834,8 +892,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                                         <h2>Guest Information</h2>
 
                                         <p>
-                                            Enter your personal details
-                                            to continue your reservation.
+                                            <?php if ($authenticatedGuest): ?>
+                                                Your account details have been filled in automatically.
+                                                Review your account's contact information.
+                                            <?php else: ?>
+                                                Enter your personal details
+                                                to continue your reservation.
+                                            <?php endif; ?>
                                         </p>
                                     </div>
 
@@ -859,6 +922,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                                             value="<?= escapeHTML(
                                                 $guestData['first_Name']
                                             ) ?>"
+                                            <?= $authenticatedGuest ? 'readonly' : '' ?>
                                             required
                                         >
 
@@ -880,6 +944,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                                             value="<?= escapeHTML(
                                                 $guestData['last_Name']
                                             ) ?>"
+                                            <?= $authenticatedGuest ? 'readonly' : '' ?>
                                             required
                                         >
 
@@ -901,6 +966,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                                             value="<?= escapeHTML(
                                                 $guestData['email_Address']
                                             ) ?>"
+                                            <?= $authenticatedGuest ? 'readonly' : '' ?>
                                             required
                                         >
 
@@ -922,6 +988,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                                             value="<?= escapeHTML(
                                                 $guestData['phone_Number']
                                             ) ?>"
+                                            <?= $authenticatedGuest ? 'readonly' : '' ?>
                                             required
                                         >
 
@@ -930,8 +997,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                                 </div>
 
                                 <p class="bk-small-note">
-                                    You can book as a guest without
-                                    creating an account.
+                                    <?php if ($authenticatedGuest): ?>
+                                        Your contact details come from your signed-in account.
+                                    <?php else: ?>
+                                        You can book as a guest without
+                                        creating an account.
+                                    <?php endif; ?>
                                 </p>
 
                             </section>
@@ -1111,7 +1182,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
 
                             <p class="bk-room-code">
                                 <?= escapeHTML($room['room_Code']) ?>
+                                <?php if ($room['floor_Number'] !== null): ?>
+                                    &bull; Floor <?= (int)$room['floor_Number'] ?>
+                                <?php endif; ?>
                             </p>
+
+                            <div class="bk-room-metadata">
+                                <p><?= (int)$room['included_Guests'] ?> included guests &bull;
+                                    Maximum <?= (int)$room['max_Guests'] ?> guests</p>
+                                <?php if ($roomBeds): ?>
+                                    <p>Beds: <?= escapeHTML(implode(', ', array_map(
+                                        static fn($bed) => (int)$bed['num_Beds'] . ' × ' . $bed['bed_Type_Name'],
+                                        $roomBeds
+                                    ))) ?></p>
+                                <?php endif; ?>
+                                <?php if ($roomFeatures): ?>
+                                    <details class="bk-room-amenities">
+                                        <summary>Features &amp; Amenities (<?= count($roomFeatures) ?>)</summary>
+                                        <ul>
+                                            <?php foreach ($roomFeatures as $feature): ?>
+                                                <li><?= escapeHTML($feature) ?></li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </details>
+                                <?php endif; ?>
+                            </div>
 
                             <div class="bk-summary-divider"></div>
 
@@ -1363,6 +1458,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
 
             $modalTitle = 'Validation Error';
             $modalMessage = $guestError;
+
+        } elseif (!empty($roomMetadataError)) {
+
+            $modalTitle = 'Room Information';
+            $modalMessage = $roomMetadataError;
 
         }
 

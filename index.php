@@ -1,6 +1,8 @@
 <?php
 
 require_once __DIR__ . '/includes/database.php';
+require_once __DIR__ . '/includes/auth_session.php';
+$currentUser = authCurrentUser($pdo);
 
 try {
 
@@ -37,7 +39,7 @@ require_once __DIR__ . '/includes/room_catalog.php';
     <title>Bella Vista Hotel & Events Place</title>
 
     <link rel="stylesheet" href="assets/css/global_style.css">
-    <link rel="stylesheet" href="assets/css/landing.css?v=2">
+    <link rel="stylesheet" href="assets/css/landing.css?v=4">
     <link rel="stylesheet" href="assets/css/availability_form.css?v=2">
     <link rel="stylesheet" href="assets/css/photo_gallery.css?v=2">
     <link rel="stylesheet" href="assets/css/rooms_facilities.css?v=4">
@@ -67,7 +69,11 @@ require_once __DIR__ . '/includes/room_catalog.php';
                     <a href="#about">About Us</a>
                     <a href="#gallery">Gallery</a>
                     <a href="#rooms">Rooms & Facilities</a>
-                    <a href="pages/login.php">Sign In / Register</a>
+                    <?php if ($currentUser): ?>
+                        <a href="<?= authEscape(authDashboardPath($currentUser['role'])) ?>" class="nav-account-link" title="Your dashboard"><?= authEscape($currentUser['first_name']) ?></a>
+                    <?php else: ?>
+                        <a href="pages/login.php">Sign In / Register</a>
+                    <?php endif; ?>
                 </div>
 
             </nav>

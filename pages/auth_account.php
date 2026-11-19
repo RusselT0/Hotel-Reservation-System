@@ -1,12 +1,11 @@
 <?php
 
 require_once __DIR__ . '/../includes/auth_session.php';
+require_once __DIR__ . '/../includes/database.php';
+$user = authRequireRoles($pdo, ['Admin', 'Housekeeping', 'Guest'], 'login.php');
 
-// Prevent unauthenticated access
-if (empty($_SESSION['auth_user'])) {
-    header('Location: login.php');
-    exit;
-}
+$guardError = $_SESSION['auth_guard_error'] ?? '';
+unset($_SESSION['auth_guard_error']);
 
 // Handle logout
 if (
@@ -22,8 +21,6 @@ if (
     exit;
 }
 
-$user = $_SESSION['auth_user'];
-
 ?>
 
 <!DOCTYPE html>
@@ -38,6 +35,7 @@ $user = $_SESSION['auth_user'];
     <title>Account | Bella Vista Hotel</title>
 
     <link rel="stylesheet" href="../assets/css/global_style.css">
+    <link rel="stylesheet" href="../assets/css/login.css?v=6">
 
 </head>
 
@@ -59,6 +57,9 @@ $user = $_SESSION['auth_user'];
         Role: <?= authEscape($user['role']) ?>
     </p>
 
+    <p><a href="../index.php">Back to Home</a></p>
+    <p><a href="../<?= authEscape(authDashboardPath($user['role'])) ?>">Go to Dashboard</a></p>
+
     <form method="POST">
 
         <input
@@ -72,6 +73,21 @@ $user = $_SESSION['auth_user'];
         </button>
 
     </form>
+
+    <?php if ($guardError): ?>
+        <dialog id="accountFeedbackModal" class="auth-feedback-modal"
+                aria-labelledby="accountModalTitle" aria-describedby="accountModalMessage">
+            <div class="auth-modal-content">
+                <div class="auth-modal-icon" aria-hidden="true">!</div>
+                <h2 id="accountModalTitle">Access Denied</h2>
+                <p id="accountModalMessage"><?= authEscape($guardError) ?></p>
+                <form method="dialog">
+                    <button type="submit" class="auth-submit-btn">Okay</button>
+                </form>
+            </div>
+        </dialog>
+        <script src="../assets/js/auth_guard_feedback.js?v=1" defer></script>
+    <?php endif; ?>
 
 </body>
 </html>
