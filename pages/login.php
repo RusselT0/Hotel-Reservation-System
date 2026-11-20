@@ -118,6 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ];
 
                 // Generate a new security token
+                $_SESSION['auth_password_fingerprint'] = hash('sha256', $user['password_Hash']);
                 $_SESSION['auth_token'] =
                     bin2hex(random_bytes(32));
 
@@ -308,13 +309,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="auth-options">
 
-                        <button
-                            type="button"
-                            id="forgotPassword"
+                        <a
+                            href="reset_password.php"
                             class="auth-text-btn"
                         >
                             Forgot password?
-                        </button>
+                        </a>
 
                     </div>
 
@@ -330,6 +330,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- REGISTER -->
 
                 <div class="auth-register">
+
+                    <p>Previously booked without an account? <a href="activate.php" class="auth-text-btn">Activate your account</a></p>
 
                     <p>
                         Don't have an account?
@@ -400,7 +402,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     </dialog>
 
-    <script src="../assets/js/login.js?v=2" defer></script>
+    <script src="../assets/js/login.js?v=3" defer></script>
 
 </body>
 </html>

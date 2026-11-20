@@ -3,6 +3,10 @@
 // Philippine Standard Time
 date_default_timezone_set('Asia/Manila');
 
+// Keep connection configuration local to this closure so including this file
+// cannot overwrite variables from a login, registration or booking form.
+$pdo = (static function (): PDO {
+
 // Database configuration
 $host = 'localhost';
 $dbname = 'hotel_reservation_system';
@@ -34,3 +38,6 @@ try {
     http_response_code(500);
     exit('Database connection failed.');
 }
+
+return $pdo;
+})();

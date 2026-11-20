@@ -2,7 +2,7 @@
 
 **Project:** Hotel Reservation System (BSIT course project)  
 **Handoff date:** 2026-11-19  
-**Primary objective:** Continue the existing application, not rebuild it. **Step 13.3B - Reservation Approval and Decline** is implemented; see Section 24 for approved workflow and test limits. Await further approval before subsequent reservation actions.
+**Primary objective:** Continue the existing application, not rebuild it. **Step 13.3B - Reservation Approval and Decline** is implemented. Offline Guest password recovery works per user confirmation (Sections 32–33). Resume Step 13.3C reservation lifecycle after agreement on the operational rules.
 
 ## 1. Instructions for Codex
 
@@ -197,7 +197,7 @@ For the current review/simulated downpayment screen, the projected balance after
 
 Example: Standard Room, two nights, 3 guests, 2 Breakfast add-ons at ₱250 each: ₱7,000 + ₱1,000 + ₱500 = ₱8,500; required deposit ₱2,550; projected balance ₱5,950. Family Room, two nights, 5 guests: ₱12,000 before add-ons, no extra fee.
 
-## 7. Database architecture (24 baseline tables; 25 after Step 11.4)
+## 7. Database architecture (24 baseline tables; 26 after Steps 11.4 and 12.6A)
 
 Baseline from the November 18 SQL export `hotel_reservation_system(4).sql` and the archive's database table list. Column names below are the established schema, not commands to recreate the database. IDs usually unsigned and auto-increment primary keys except lookup bridge keys; check `SHOW CREATE TABLE` for exact types, constraints, defaults, indexes, and FK names. Most entity/bridge tables use `deleted_At` for soft deletion. The lookup `is_Active` fields represent enabled lookup rows, not necessarily a user's status; check the actual status name and account row.
 
@@ -352,7 +352,13 @@ The numbering below continues the prior discussions. Folder migration steps 1–
 - [x] Guest session recognition and account link on public pages (Step 12.1; anonymous HTTP tests passed; authenticated browser testing pending).
 - [x] Booking form auto-fill for authenticated Guest accounts (Step 12.2; anonymous regression passed; authenticated browser test pending).
 - [x] Safe authenticated repeat reservations (Step 12.3; implemented; signed-in save test pending).
-- [ ] Existing passwordless guest account activation/repeat booking: ownership verification policy must be approved separately.
+- [x] Step 12.6A: reusable account token schema (approved hybrid approach; migration applied).
+- [x] Step 12.6B: Admin-assisted activation token issuance after verified identity (implementation complete; authenticated issuance test pending).
+- [x] Step 12.6C: guest activation form and one-time token consumption; preserve existing user ID (implementation complete; valid-code test pending).
+- [~] Step 12.6D: live database evidence confirms successful activation and replacement-code revocation; signed-in UI and replay rejection checks require user confirmation.
+- [x] Step 12.7A: Admin-assisted Guest password reset code issuance (shared account-token schema and UI; no reset yet).
+- [x] Step 12.7B: Guest password reset redemption and invalidation of prior authenticated sessions (implementation; end-to-end testing pending).
+- [~] Step 12.7C: user confirms offline password recovery works; individual edge-case results not independently verified.
 - [x] Centralized authorization guards (Step 12.4; existing account page and anonymous/API checks passed).
 - [x] Role-based dashboard redirects and protected dashboard entry pages (Step 12.5; signed-in verification pending).
 - [ ] Remaining session hardening and authenticated regression checks.
@@ -364,7 +370,10 @@ The numbering below continues the prior discussions. Folder migration steps 1–
 - [ ] Hybrid housekeeping operations and optional simple staff dashboard, subject to confirmation.
 - [ ] Guest dashboard and reservation history/self-service.
 - [ ] Payment process refinement (user to provide revised requirements; no premature change).
-- [ ] Integration, security, accessibility, responsive tests, academic documentation and evaluation.
+- [ ] PHPMailer integration for activation, password recovery, and reservation notifications; admin-assisted offline Guest recovery remains available.
+- [ ] reCAPTCHA and security hardening (do not silently bypass online verification on network failure).
+- [ ] UI/UX polish, interactivity and WCAG accessibility review.
+- [ ] Final integration, security, accessibility, responsive tests, academic documentation and evaluation.
 
 ### Phase 0 — Migration smoke test
 
@@ -641,3 +650,72 @@ The current working copy and Apache/MariaDB were inspected directly rather than 
 - `includes/admin_reservations.php` includes payment flags and live stay eligibility for details. `admin/reservations.php` adds the approve and reason-required decline forms within existing details modal, and uses generic modal feedback. Past arrival dates cannot be approved; decline remains possible for an unverified pending booking. `assets/css/admin_reservations.css` and `assets/js/admin_reservations.js` updated (v2) for decision controls and reopening details after feedback.
 - Tests: all four changed PHP files linted; `git diff --check` passed. Synthetic centavo conversion and review fingerprint checks passed. Live read-only details verified all three current pending-approval reservations have one sufficient submitted pending downpayment, but none has nonpast arrival dates. Anonymous reservation/action endpoints redirected to login; updated CSS/JS returned HTTP 200. Existing counts remain 6 bookings, 3 payments and 9 booking logs. Authenticated end-to-end approve/decline write-flow testing requires a fresh future-date test reservation and legitimate Admin login; no test data was mutated. Keep existing records intact.
 - Next: test with a fresh disposable future reservation, then agree on cancellation and actual check-in/check-out rules. Refunds and payment redesign remain deferred.
+
+## 25. Registration feedback fix (2026-11-20)
+
+- `pages/register.php`: fixed missing `data-auto-open` attribute on the registration feedback dialog, matching the existing login dialog and shared `login.js`. Server-side registration errors now request automatic modal opening. Existing-email conflicts use consistent guidance to sign in or contact the hotel if the guest previously booked without an account.
+- Existing passwordless guest records remain protected: registration cannot claim their email, create a duplicate `users` row or assign a password without proof of ownership. Account activation requires a separately approved verification process (e.g. email verification or admin-assisted verification); no password or ownership data changed.
+- Verification: PHP lint, `git diff --check`, live registration GET and invalid-form POST passed; error response contained `data-auto-open="true"` and expected validation text. Read-only count found six passwordless Guest records. No registration record was created by the test. The reservation roadmap remains at Step 13.3B; Step 13.3C and activation workflow await approval.
+
+## 26. Step 12.6A — Account Token Schema (2026-11-20)
+
+**Status:** Completed the database-only foundation after user approval of the hybrid offline/online approach. Await approval before Step 12.6B (admin-assisted issuance).
+
+- `migrations/2026-11-20_account_token.sql`: additive `account_token` table with unique token hash, user and optional issuing Admin foreign keys, purpose (`Activation` or `Password Reset`), delivery method (`Email` or `Admin Assisted`), creation, expiry, used and revoked timestamps. Revocation distinguishes invalidated tokens from successfully consumed tokens. Application will enforce one active token per user/purpose transactionally and check issuer role/status; constraints enforce expiry ordering and delivery/issuer consistency. Raw codes must never be stored in the table or logged.
+- Pre-migration database backup created outside the web root in the Windows temporary directory (`bella_vista_pre_12_6A_20261120_202108.sql`); keep private. Live schema verified: 26 tables, zero token records, 9 users and 6 bookings. Existing records and passwords unchanged. Migration applied once; other devices need this migration only if using a database export predating it.
+- Next substeps: 12.6B guarded Admin issuance only after independent identity verification and private code handover; 12.6C guest activation by expiring single-use token, keeping the existing user ID and bookings. Password reset is a separate future purpose; no token issuance or password updates exist yet. PHPMailer will later reuse the token mechanism for email delivery and notifications. Offline recovery must stay independently verified; reCAPTCHA, remaining security hardening, UI/interactivity and WCAG review are planned after main functionality, as requested. No automatic bypass of online security controls.
+
+## 27. Step 12.6B — Admin-Assisted Activation Issuance (2026-11-20)
+
+**Status:** Implemented issuer only. Do not issue real guest codes until Step 12.6C redemption is implemented. Await user approval before that step.
+
+- `includes/admin_guest_activation.php`: lists only active, non-deleted, passwordless Guest records. Exact email search and booking count, limit 50. Issuance locks the target user, revalidates Admin identity, revokes previous unused activation tokens, generates a random 256-bit code, stores only its SHA-256 hash and issuer, and commits a 30-minute expiration atomically. Password-reset tokens are untouched. No account/password change is made.
+- `admin/guest_activation.php`: protected Admin screen, CSRF-protected POST search (avoid email in URLs) and issuance. Admin must attest to independent identity verification before generating/replacing a code; name, email or booking number alone is insufficient. Share only privately with the verified guest. The raw code is presented in a one-time session-backed modal after redirect, with no-store headers; never emitted in URLs or logs. `assets/js/admin_guest_activation.js` clears the code on modal close; `assets/css/admin_guest_activation.css` preserves existing dashboard/table design. Sidebar links the new module.
+- Tests: all three modified PHP files passed lint and `git diff --check`. Live read-only query found six eligible guests, exact-email/no-match searches passed (no guest information printed), zero token records, anonymous page redirects to login, CSS and JS return HTTP 200. Authenticated issuance and end-to-end redemption tests remain pending legitimate Admin testing after Step 12.6C. No actual token was issued, no account/person/reservation records modified, and no schema change was required.
+- Next: implement secure guest activation redemption form with token expiry and purpose checks, atomic consumption, password validation/hash and existing user ID preserved. PHPMailer and password-reset flows remain future milestones.
+
+## 28. Step 12.6C — Guest Activation Redemption (2026-11-20)
+
+**Status:** Implemented; legitimate valid-code end-to-end testing remains Step 12.6D, awaiting approval.
+
+- `pages/activate.php` reuses the existing authentication design, modal feedback and password visibility. Anonymous guest enters existing booking email, Admin-issued 64-character code, new password and confirmation. POST-only processing, CSRF, no-store/referrer headers, matching registration password policy, generic invalid account/code feedback and basic session-based attempt limit (5 valid-format attempts per 15 minutes; stronger shared limiting remains future hardening). Code/password never echoed back or logged; no automatic login. Signed-in users must sign out first.
+- `includes/guest_activation.php`: locks the active passwordless Guest row, then validates matching SHA-256 hash, correct user, purpose `Activation`, `Admin Assisted` delivery, expiration, unused/unrevoked state and active issuer Admin. Password is hashed and assigned only to the existing passwordless user. Token consumption and revocation of other outstanding activation tokens commit in the same transaction, with rollback on error. No duplicate user or ownership reassignment, no password reset, no email issuance, no booking changes.
+- `pages/login.php` and `pages/register.php` link to activation; `assets/js/login.js` supports `activateForm` (v3) while retaining existing form validation. Successful activation redirects to login with existing success modal.
+- Tests: four modified PHP files passed lint and `git diff --check`; live activation GET, synthetic malformed-code and invalid-account/code POST produced expected modal feedback. Login/register links and JS URL return HTTP 200. Current live counts observed: 10 users, 7 bookings, 1 token (existing data retained; no valid-code POST or record writes performed by these tests). The successful activation/reuse/expiry write path still requires deliberate testing with a disposable guest and a privately issued code. No database migration in this step.
+- Next: Step 12.6D test a disposable future guest reservation and legitimate Admin issuance/guest redemption, including one-time use and retained booking history. Do not expose or redeem existing real codes without authorization. PHPMailer, password reset, reCAPTCHA and final UI/accessibility milestones remain deferred.
+
+## 29. Step 12.6D — Activation Verification (2026-11-20)
+
+**Status:** Positive database evidence for an actual completed activation; user-side login/reuse UI checks remain pending confirmation. No new test record or credential change was made by Codex.
+
+- The live database now contains two Admin-assisted Activation tokens, one used and one revoked, with zero active tokens. Aggregate read-only verification confirms the consumed token belongs to a Guest with a password hash, was consumed before expiry, has at least one retained associated booking, and an older unused code for the same guest was revoked. No token is simultaneously consumed and revoked. Existing counts remain 10 users and 7 bookings.
+- No email, code, hash, or password was retrieved or printed. Do not generate or consume another token merely to repeat a successful data check. Confirm with the user that the intended disposable guest can sign in under the Guest role, and that the used or replaced code cannot be redeemed again. Successful/expired-code HTTP redemption and dashboard history visual checks remain unverified independently. No schema or application functionality changed during this verification.
+- After user confirmation, resume Step 13.3C reservation lifecycle rules; retain future PHPMailer, guest recovery and security/accessibility milestones.
+
+## 30. Login and registration shared-variable isolation fix (2026-11-20)
+
+- User reported successful activation followed by invalid-credentials login even with the intended password. Inspection confirmed a PHP include-scope collision: `includes/database.php` overwrote the submitted form variable before credential verification; the same issue could affect regular registration. Activation loaded the database before reading form inputs, which explains why activation succeeded.
+- `includes/database.php` now creates its PDO connection inside a static closure that returns `$pdo`. Connection configuration remains private to that scope; caller form values are unchanged. No database credentials, existing hashes or other records were changed or exposed.
+- Regression checks passed: PHP lint, `git diff --check`, synthetic in-memory password preserved across database inclusion, password verification and registration hashing with the preserved value, PDO read-only connection check, and HTTP 200 for homepage/login/registration/activation with no displayed PHP warnings. Read-only diagnostics confirmed both consumed activation records belong to active Guests with recognized bcrypt hashes. Actual signed-in verification remains the user's private test.
+- Existing accounts created through the older affected self-registration flow may need individually authorized password recovery; do not rewrite their password hashes blindly, reveal database credentials, or permit bypassing identity verification. Guest accounts activated through the correct flow should not need new codes; retry using the password privately chosen during activation. Preserve the roadmap at activation testing until confirmed.
+
+## 31. Step 12.7A — Admin-Assisted Guest Password Reset Issuance (2026-11-20)
+
+**Status:** Implemented at user's request to handle forgot password before Step 13.3C. Issuance only; do not issue real reset codes until redemption and session revocation are available.
+
+- `includes/admin_guest_activation.php`: generalized the existing issuer/list to `adminGuestTokenCandidates` and `adminIssueGuestToken`, with a strictly enumerated purpose and separate eligibility. Activation requires passwordless active Guest; Password Reset requires an existing nonempty password hash. Both require live active Admin issuance and explicit independent identity verification. Reissuance revokes only unused tokens of the same purpose. Code generation, hash-only database storage and 30-minute expiry remain unchanged. No recovery for privileged Admin/Housekeeping accounts in this Guest workflow; define separate controlled policy if needed.
+- `admin/guest_activation.php?mode=reset` reuses the protected page, private one-time display, CSRF POST and modal feedback, while keeping separate selection, labels, flash key and purpose. `includes/admin_sidebar.php` adds Guest password recovery link. Existing activation mode remains available. No new schema or password changes.
+- Tests: three changed PHP files linted; `git diff --check` passed. Live read-only results show four eligible passwordless Guests and five eligible reset Guests, no overlap, zero reset tokens, successful exact-email filter and invalid-purpose rejection. Both Admin page modes redirect anonymous requests to login. No actual reset code was issued and no credentials were changed.
+- Next: Step 12.7B add public Forgot Password / reset redemption with exact purpose, identity, expiry and single-use checks; require new password confirmation, atomic update, invalidate all prior authenticated sessions for the account (e.g. server-side fingerprint of stored hash; never expose raw hash), and revoke outstanding reset tokens. Step 12.7C test legitimate disposable recovery. Future PHPMailer email delivery and reCAPTCHA remain deferred; no offline bypass of identity verification.
+
+## 32. Step 12.7B - Guest Password Reset Redemption and Session Revocation (2026-11-20)
+
+- `pages/reset_password.php` selects reset mode server-side and reuses `pages/activate.php` for the shared responsive form, modal feedback, CSRF validation, confirmation, and separate per-session attempt tracking. `pages/login.php` links to the reset page; `assets/js/login.js` removes the temporary unavailable message.
+- `includes/guest_activation.php` accepts strictly enumerated token purposes, requires a password-bearing active Guest for reset, and validates exact purpose, user, active issuer, expiry, and unused/unrevoked status. Password hashing, token consumption and revocation of outstanding same-purpose tokens remain atomic. Existing activation retains passwordless-only eligibility.
+- `pages/login.php` stores a server-side fingerprint of the verified stored password hash; `includes/auth_session.php` checks it on each guarded request. Prior sessions without a fingerprint must sign in again once; sessions with an outdated fingerprint lose authenticated access on their next guarded request. No raw password hash is placed in session data or rendered to the browser.
+- Tests: all five changed PHP files passed PHP lint; login, activation and reset pages returned HTTP 200; synthetic malformed-code POST displayed the expected modal. No real passwords or reset tokens were changed during these tests. No schema migration required. Step 12.7C remains pending: legitimate disposable Guest reset, old/new login, prior-session revocation and one-use token verification. Await approval before proceeding.
+
+## 33. Step 12.7C - User verification and next milestone (2026-11-20)
+
+- User confirms password recovery works and requests continuation. Individual expiration, token reuse, prior-session invalidation and booking retention tests were not separately reported; retain these as regression checks rather than claim independent verification.
+- Resume Step 13.3C. Confirm actual arrival/departure, cancellation/refund boundaries and room readiness transitions before implementing operational actions. Existing payment simulation remains unchanged pending separate approval.

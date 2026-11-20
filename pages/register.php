@@ -4,6 +4,8 @@ require_once __DIR__ . '/../includes/auth_session.php';
 
 $authError = '';
 $authSuccess = '';
+$existingEmailMessage = 'This email cannot be registered. If you already have an account, sign in. '
+    . 'If you previously booked without an account, contact the hotel for help activating your account.';
 
 $firstName = '';
 $lastName = '';
@@ -85,9 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($stmt->fetch()) {
 
-                $authError =
-                    "This email cannot be registered. " .
-                    "Please use another email or sign in.";
+                $authError = $existingEmailMessage;
 
             } else {
 
@@ -159,8 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ((int)($e->errorInfo[1] ?? 0) === 1062) {
 
-                $authError =
-                    "This email cannot be registered.";
+                $authError = $existingEmailMessage;
 
             } else {
 
@@ -422,6 +421,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="auth-register">
 
+                    <p>Previously booked without an account? <a href="activate.php" class="auth-text-btn">Activate your account</a></p>
+
                     <p>
                         Already have an account?
 
@@ -452,6 +453,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <dialog
         id="loginFeedbackModal"
         class="auth-feedback-modal"
+        data-auto-open="<?= ($authError || $authSuccess) ? 'true' : 'false' ?>"
         aria-labelledby="authModalTitle"
         aria-describedby="authModalMessage"
     >
@@ -487,7 +489,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     </dialog>
 
-    <script src="../assets/js/login.js?v=2" defer></script>
+    <script src="../assets/js/login.js?v=3" defer></script>
 
 </body>
 </html>

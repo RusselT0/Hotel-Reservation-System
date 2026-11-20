@@ -3,7 +3,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const form =
         document.getElementById("loginForm") ||
-        document.getElementById("registerForm");
+        document.getElementById("registerForm") ||
+        document.getElementById("activateForm");
 
     const password = document.getElementById("password");
     const togglePassword = document.getElementById("togglePassword");
@@ -104,20 +105,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // Valid forms continue to PHP normally.
 
     });
-
-    // ========================================
-    // FORGOT PASSWORD - TEMPORARY
-    // ========================================
-
-    document.getElementById("forgotPassword")
-        ?.addEventListener("click", () => {
-
-            showFeedback(
-                "Password Recovery",
-                "Password recovery is not yet available."
-            );
-
-        });
 
     // Return focus to the invalid field
     modal.addEventListener("close", () => {

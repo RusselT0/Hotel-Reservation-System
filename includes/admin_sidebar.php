@@ -10,6 +10,8 @@ $adminModules = [
     ['id' => 'rooms', 'label' => 'Rooms & Facilities', 'href' => null, 'description' => 'Manage inventory, availability and room information.'],
     ['id' => 'housekeeping', 'label' => 'Housekeeping', 'href' => null, 'description' => 'Coordinate cleaning assignments and room readiness.'],
     ['id' => 'users', 'label' => 'Users', 'href' => null, 'description' => 'Manage guest and staff accounts.'],
+    ['id' => 'guest_activation', 'label' => 'Guest activation', 'href' => 'guest_activation.php', 'description' => 'Issue an offline activation code after verifying guest identity.'],
+    ['id' => 'guest_password_recovery', 'label' => 'Guest password recovery', 'href' => 'guest_activation.php?mode=reset', 'description' => 'Issue an offline reset code after verifying guest identity.'],
     ['id' => 'reports', 'label' => 'Reports', 'href' => null, 'description' => 'Review booking activity and verified revenue.']
 ];
 ?>

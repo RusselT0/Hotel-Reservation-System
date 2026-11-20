@@ -38,7 +38,7 @@ function authCurrentUser(PDO $pdo, bool $lockForUpdate = false): ?array {
     try {
         $sql = "
             SELECT u.user_ID, u.first_Name, u.last_Name,
-                   u.email_Address, u.phone_Number, ur.role_Name
+                   u.email_Address, u.phone_Number, ur.role_Name, u.password_Hash
             FROM users u
             JOIN user_role ur ON ur.role_ID = u.role_ID
             JOIN account_status ast ON ast.account_Status_ID = u.account_Status_ID
@@ -58,8 +58,9 @@ function authCurrentUser(PDO $pdo, bool $lockForUpdate = false): ?array {
         $stmt->execute(['user_id' => $userID]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$user) {
-            unset($_SESSION['auth_user']);
+        $fingerprint = $_SESSION['auth_password_fingerprint'] ?? null;
+        if (!$user || !is_string($fingerprint) || !hash_equals(hash('sha256', $user['password_Hash']), $fingerprint)) {
+            unset($_SESSION['auth_user'], $_SESSION['auth_password_fingerprint']);
             return null;
         }
 
